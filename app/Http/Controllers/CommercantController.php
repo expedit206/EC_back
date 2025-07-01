@@ -1,13 +1,12 @@
 <?php
-
-// app/Http/Controllers/BoutiqueController.php
+// app/Http/Controllers/CommercantController.php
 namespace App\Http\Controllers;
 
-use App\Models\Boutique;
+use App\Models\Commercant;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 
-class BoutiqueController extends Controller
+class CommercantController extends Controller
 {
     public function store(Request $request)
     {
@@ -19,29 +18,28 @@ class BoutiqueController extends Controller
         ]);
 
         $user = auth()->user();
-        $commercant = $user->commercant;
 
-        if (!$commercant) {
-            return response()->json(['message' => 'Vous devez d\'abord créer un compte commerçant'], 403);
+        if ($user->commercant) {
+            return response()->json(['message' => 'Vous avez déjà un compte commerçant'], 400);
         }
 
-        $boutique = new Boutique([
+        $commercant = new Commercant([
             'id' => Uuid::uuid4()->toString(),
-            'commercant_id' => $commercant->id,
-            'nom' => $request->nomkeyboard: nom
+            'user_id' => $user->id,
+            'nom' => $request->nom,
             'description' => $request->description,
             'logo' => $request->logo,
             'ville' => $request->ville,
             'actif' => true,
         ]);
-        $boutique->save();
+        $commercant->save();
 
-        return response()->json(['message' => 'Boutique créée', 'boutique' => $boutique], 201);
+        return response()->json(['message' => 'Compte commerçant créé', 'commercant' => $commercant], 201);
     }
 
     public function index()
     {
-        $boutiques = Boutique::with('commercant', 'produits')->get();
-        return response()->json(['boutiques' => $boutiques]);
+        $commercants = Commercant::with('user', 'boutiques')->get();
+        return response()->json(['commercants' => $commercants]);
     }
 }
