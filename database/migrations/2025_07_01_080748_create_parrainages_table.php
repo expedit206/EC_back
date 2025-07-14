@@ -13,10 +13,8 @@ return new class extends Migration
     {
         Schema::create('parrainages', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('parrain_id');
-            $table->uuid('filleul_id');
-            $table->foreign('parrain_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('filleul_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('parrain_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('filleul_id')->references('id')->on('users')->onDelete('cascade');
             $table->integer('niveau')->default(1);
             $table->decimal('recompense', 10, 2)->default(0);
             $table->timestamps();

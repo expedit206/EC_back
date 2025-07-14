@@ -9,7 +9,7 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id(); // Laravel sait déjà que c'est la clé primaire
             $table->string('nom');
             $table->string('email')->nullable()->unique();
             $table->string('telephone')->unique();
@@ -17,13 +17,18 @@ class CreateUsersTable extends Migration
             $table->string('mot_de_passe');
             $table->string('photo')->nullable();
             $table->boolean('premium')->default(false);
-            $table->uuid('parrain_id')->nullable();
+
+            // Corrigé ici :
+            $table->foreignId('parrain_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->string('code_parrainage')->unique()->nullable();
             $table->decimal('solde', 10, 2)->default(0);
-            $table->foreign('parrain_id')->references('id')->on('users')->onDelete('set null');
             $table->timestamps();
         });
-
+        
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');

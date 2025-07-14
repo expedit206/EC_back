@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('commercants', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id')->unique();
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('nom');
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->string('ville');
             $table->boolean('actif')->default(true);
             $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

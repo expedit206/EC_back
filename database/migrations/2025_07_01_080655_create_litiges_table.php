@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('litiges', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('commande_id');
-            $table->uuid('user_id');
             $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->text('description');
             $table->enum('statut', ['ouvert', 'résolu', 'rejeté'])->default('ouvert');
             $table->json('preuves')->nullable();

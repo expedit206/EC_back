@@ -47,7 +47,15 @@ class ProduitController extends Controller
 
     public function index()
     {
-        $produits = Produit::with('boutique')->get();
-        return response()->json(['produits' => $produits]);
+        // die;
+        // return response()->json(['produits' => 'echec']);
+        // return response()->json(['produits' => 'produits']);
+        $products = Produit::paginate(12); // 12 produits par page
+        return response()->json([
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+        ]);
+        // return response()->json(['produits' => $produits]);
     }
 }

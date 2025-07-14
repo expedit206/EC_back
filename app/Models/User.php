@@ -2,32 +2,41 @@
 // app/Models/User.php
 namespace App\Models;
 
+use App\Models\Litige;
+use App\Models\Boutique;
+use App\Models\Commande;
+use App\Models\Abonnement;
+use App\Models\Commercant;
+use App\Models\Parrainage;
+use App\Models\Collaboration;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable 
 {
-    use HasApiTokens;
-
-    protected $keyType = 'string';
-    public $incrementing = false;
+    // protected $primaryKey = 'id';
+    // protected $keyType = 'string';
+    // public $incrementing = false;
 
     protected $fillable = [
         'id',
         'nom',
-        'email',
         'telephone',
+        'email',
         'ville',
         'mot_de_passe',
-        'photo',
+        'role',
         'premium',
         'parrain_id',
-        'code_parrainage',
-        'solde'
     ];
 
-    protected $hidden = ['mot_de_passe'];
+    protected $hidden = [
+        'mot_de_passe',
+    ];
 
+    public function getAuthPassword()
+    {
+        return $this->mot_de_passe;
+    }
     public function commercant()
     {
         return $this->hasOne(Commercant::class);

@@ -26,13 +26,13 @@ class BoutiqueController extends Controller
         }
 
         $boutique = new Boutique([
-            'id' => Uuid::uuid4()->toString(),
-            'commercant_id' => $commercant->id,
-            'nom' => $request->nomkeyboard: nom
-            'description' => $request->description,
-            'logo' => $request->logo,
-            'ville' => $request->ville,
-            'actif' => true,
+            // 'id' => Uuid::uuid4()->toString(),
+            // 'commercant_id' => $commercant->id,
+            // 'nom' => $request->nomkeyboard: nom
+            // 'description' => $request->description,
+            // 'logo' => $request->logo,
+            // 'ville' => $request->ville,
+            // 'actif' => true,
         ]);
         $boutique->save();
 

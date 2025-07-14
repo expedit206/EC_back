@@ -1,13 +1,13 @@
 <?php
 
-// app/Http/Controllers/UserController.php
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Parrainage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -15,63 +15,95 @@ class UserController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email',
-            'telephone' => 'required|string|unique:users,telephone',
+            'telephone' => 'required|string|max:20|unique:users,telephone',
+            'email' => 'nullable|email|max:255|unique:users,email',
             'ville' => 'required|string|max:255',
             'mot_de_passe' => 'required|string|min:8',
-            'parrain_code' => 'nullable|string|exists:users,code_parrainage',
+            'parrain_id' => 'nullable|exists:users,id',
         ]);
 
-        $user = new User([
-            'id' => Uuid::uuid4()->toString(),
+        $user = User::create([
+            // 'id' => Str::uuid(),
             'nom' => $request->nom,
-            'email' => $request->email,
             'telephone' => $request->telephone,
+            'email' => $request->email,
             'ville' => $request->ville,
             'mot_de_passe' => Hash::make($request->mot_de_passe),
-            'code_parrainage' => Str::random(8), // Génère un code unique
+            // 'role' => 'user',
+            'premium' => false,
+            'parrain_id' => $request->parrain_id,
         ]);
 
-        if ($request->parrain_code) {
-            $parrain = User::where('code_parrainage', $request->parrain_code)->first();
-            $user->parrain_id = $parrain->id;
+        if ($request->parrain_id) {
+            Parrainage::create([
+                // 'id' => Str::uuid(),
+                'parrain_id' => $request->parrain_id,
+                'filleul_id' => $user->id,
+                'niveau' => 1,
+                'recompense' => 500,
+            ]);
         }
-
-        $user->save();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Inscription réussie',
-            'user' => $user,
-            'token' => $token,
+            'user' => [
+                // 'id' => $user->id,
+                'nom' => $user->nom,
+                'email' => $user->email,
+                'telephone' => $user->telephone,
+                'ville' => $user->ville,
+                'role' => $user->role,
+                'premium' => $user->premium,
+                'parrain_id' => $user->parrain_id,
+            ],
         ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'telephone' => 'required|string',
+            'login' => 'required|string',
             'mot_de_passe' => 'required|string',
         ]);
+        $field = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'telephone';
+        $user = User::where($field, $request->input('login'))->first();
 
-        $user = User::where('telephone', $request->telephone)->first();
-
-        if (!$user || !Hash::check($request->mot_de_passe, $user->mot_de_passe)) {
-            return response()->json(['message' => 'Identifiants incorrects'], 401);
+        if (!$user || !Hash::check($request->input('mot_de_passe'), $user->mot_de_passe)) {
+            throw ValidationException::withMessages([
+                'login' => ['Les informations d\'identification sont incorrectes.'],
+            ]);
+            // return response()->json([
+            //     'message' => 'Connexion echoué',
+            //     'user' => $user,
+            //     'field' => $field,
+            //     'request' => $request->all(),
+            // ]);
         }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Connexion réussie',
-            'user' => $user,
-            'token' => $token,
-        ]);
+            'user' => [
+                'id' => $user->id,
+                'nom' => $user->nom,
+                'email' => $user->email,
+                'telephone' => $user->telephone,
+                'ville' => $user->ville,
+                'role' => $user->role,
+                'premium' => $user->premium,
+            ],
+        ], 200);
     }
 
     public function profile(Request $request)
     {
-        return response()->json(['user' => $request->user()]);
+
+        return response()->json([
+            'user' => $request->input('user'),
+        ], 200);
+    }
+
+    public function logout()
+    {
+        return response()->json(['message' => 'Déconnexion réussie'], 200);
     }
 }

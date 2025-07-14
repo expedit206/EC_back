@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('produits', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('boutique_id');
-            $table->foreign('boutique_id')->references('id')->on('boutiques')->onDelete('cascade');
+            $table->uuid('commercant_id');
+            $table->foreign('commercant_id')->references('id')->on('boutiques')->onDelete('cascade');
             $table->string('nom');
             $table->text('description')->nullable();
             $table->decimal('prix', 10, 2);

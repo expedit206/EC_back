@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('collaborations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('produit_id');
-            $table->uuid('user_id');
             $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->decimal('prix_revente', 10, 2);
             $table->enum('statut', ['en_attente', 'validée', 'refusée'])->default('en_attente');
             $table->decimal('gains_totaux', 10, 2)->default(0);
