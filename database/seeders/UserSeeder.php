@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     {
         
         // Créer 50 utilisateurs
-        User::factory(5)->create();
+        User::factory(2)->create();
 
         // Créer un utilisateur admin spécifique
         User::firstOrCreate(

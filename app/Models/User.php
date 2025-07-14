@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role',
         'premium',
         'parrain_id',
+        'token',
     ];
 
     protected $hidden = [

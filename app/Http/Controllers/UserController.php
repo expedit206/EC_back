@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Parrainage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -18,7 +20,7 @@ class UserController extends Controller
             'telephone' => 'required|string|max:20|unique:users,telephone',
             'email' => 'nullable|email|max:255|unique:users,email',
             'ville' => 'required|string|max:255',
-            'mot_de_passe' => 'required|string|min:8',
+            // 'mot_de_passe' => 'required|string|min:8',
             'parrain_id' => 'nullable|exists:users,id',
         ]);
 
@@ -33,6 +35,7 @@ class UserController extends Controller
             'premium' => false,
             'parrain_id' => $request->parrain_id,
             'token' => Str::uuid(), // Générer un token à l'inscription
+            'token_expires_at' => Carbon::now()->addDays(7),
         ]);
 
 
@@ -78,8 +81,10 @@ class UserController extends Controller
 
         }
         $token = Str::uuid();
-        $user->update(['token' => $token]);
-        $user->load('commercant');
+        $user->update(['token' => $token,
+                'token_expires_at' => Carbon::now()->addDays(7), // Expire dans 7 jours
+                ]);
+                $user->load('commercant');
         return response()->json([
             'message' => 'Connexion réussie',
             'user' => [
@@ -97,9 +102,15 @@ class UserController extends Controller
     public function profile(Request $request)
     {
 
+        // $token = $request->header('Authorization');
+
+        $user = $request->user;
+        // $user = User::where('token', $token)->first();
+        $user->load('commercant');
         return response()->json([
-            'user' => $request->input('user'),
-        ], 200);
+            'user' => $user,
+        ],
+    );
     }
 
     public function logout()

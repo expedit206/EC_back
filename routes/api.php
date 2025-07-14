@@ -30,7 +30,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     // Routes protégées
     Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('auth.token')->group(function () {
-        Route::get('user/{user}', [UserController::class, 'profile']);
+        Route::get('user', [UserController::class, 'profile']);
         Route::post('logout', [UserController::class, 'logout']);
        
         Route::post('commercants', [CommercantController::class, 'store']);
