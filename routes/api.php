@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CommercantController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\CollaborationController;
@@ -23,6 +24,9 @@ Route::post('login', [UserController::class, 'login']);
 
     Route::post('register', [UserController::class, 'register']);
     Route::post('login', [UserController::class, 'login']);
+
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     // Routes protégées
     Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('')->group(function () {

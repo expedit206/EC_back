@@ -9,6 +9,42 @@ use Ramsey\Uuid\Uuid;
 
 class ProduitController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = Produit::query();
+
+        if ($request->has('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->has('prix_min')) {
+            $query->where('prix', '>=', $request->prix_min);
+        }
+
+        if ($request->has('prix_max')) {
+            $query->where('prix', '<=', $request->prix_max);
+        }
+
+        if ($request->has('ville')) {
+            $query->where('ville', $request->ville);
+        }
+
+        if ($request->has('collaboratif')) {
+            $query->where('collaboratif', filter_var($request->collaboratif, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->has('search')) {
+            $query->where('nom', 'LIKE', '%' . $request->search . '%');
+        }
+
+        $products = $query->paginate(12);
+        return response()->json([
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+        ]);
+    }
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -45,17 +81,5 @@ class ProduitController extends Controller
         return response()->json(['message' => 'Produit créé', 'produit' => $produit], 201);
     }
 
-    public function index()
-    {
-        // die;
-        // return response()->json(['produits' => 'echec']);
-        // return response()->json(['produits' => 'produits']);
-        $products = Produit::paginate(12); // 12 produits par page
-        return response()->json([
-            'data' => $products->items(),
-            'current_page' => $products->currentPage(),
-            'last_page' => $products->lastPage(),
-        ]);
-        // return response()->json(['produits' => $produits]);
-    }
+
 }

@@ -9,6 +9,7 @@ use App\Models\Abonnement;
 use App\Models\Commercant;
 use App\Models\Parrainage;
 use App\Models\Collaboration;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable 
@@ -16,6 +17,7 @@ class User extends Authenticatable
     // protected $primaryKey = 'id';
     // protected $keyType = 'string';
     // public $incrementing = false;
+    use HasFactory;
 
     protected $fillable = [
         'id',
