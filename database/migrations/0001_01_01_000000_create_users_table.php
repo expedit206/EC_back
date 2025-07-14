@@ -26,6 +26,7 @@ class CreateUsersTable extends Migration
 
             $table->string('code_parrainage')->unique()->nullable();
             $table->decimal('solde', 10, 2)->default(0);
+            $table->string('token')->nullable()->unique();
             $table->timestamps();
         });
         

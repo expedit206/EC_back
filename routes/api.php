@@ -29,7 +29,7 @@ Route::post('login', [UserController::class, 'login']);
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     // Routes protégées
     Route::get('produits', [ProduitController::class, 'index']);
-    Route::middleware('')->group(function () {
+    Route::middleware('auth.token')->group(function () {
         Route::get('user/{user}', [UserController::class, 'profile']);
         Route::post('logout', [UserController::class, 'logout']);
        
@@ -46,4 +46,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::patch('litiges/{id}', [LitigeController::class, 'update']);
         // Route::post('abonnements', [AbonnementController::class, 'store']);
         Route::post('parrainages', [ParrainageController::class, 'store']);
+
+    Route::get('/commercant/produits', [CommercantController::class, 'produits'])->name('commercant.produits');
+    Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store');
+    Route::delete('/commercant/produits/{id}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
+    Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
+    Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
     });

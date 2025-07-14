@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Application;
+use App\Http\Middleware\AuthToken;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -34,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
         VerifyCsrfToken::class,
     ]);
 
+    $middleware->alias([
+        'auth.token' => AuthToken::class,
+    ]);
     // Middleware pour les requêtes API "stateful" (SPA)
     
 })

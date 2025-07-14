@@ -32,7 +32,9 @@ class UserController extends Controller
             // 'role' => 'user',
             'premium' => false,
             'parrain_id' => $request->parrain_id,
+            'token' => Str::uuid(), // Générer un token à l'inscription
         ]);
+
 
         if ($request->parrain_id) {
             Parrainage::create([
@@ -56,6 +58,7 @@ class UserController extends Controller
                 'premium' => $user->premium,
                 'parrain_id' => $user->parrain_id,
             ],
+            'token' => $user->token,
         ], 201);
     }
 
@@ -72,14 +75,11 @@ class UserController extends Controller
             throw ValidationException::withMessages([
                 'login' => ['Les informations d\'identification sont incorrectes.'],
             ]);
-            // return response()->json([
-            //     'message' => 'Connexion echoué',
-            //     'user' => $user,
-            //     'field' => $field,
-            //     'request' => $request->all(),
-            // ]);
-        }
 
+        }
+        $token = Str::uuid();
+        $user->update(['token' => $token]);
+        $user->load('commercant');
         return response()->json([
             'message' => 'Connexion réussie',
             'user' => [

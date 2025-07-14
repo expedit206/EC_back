@@ -1,87 +1,77 @@
 <?php
 
-// app/Http/Controllers/CommandeController.php
 namespace App\Http\Controllers;
 
-use App\Models\Commande;
+use App\Models\Commercant;
 use App\Models\Produit;
 use Illuminate\Http\Request;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Auth;
 
-class CommandeController extends Controller
+class CommercantController extends Controller
 {
-    public function store(Request $request)
+    public function produits()
     {
-        $request->validate([
-            'produit_id' => 'required|uuid|exists:produits,id',
-            'collaborateur_id' => 'nullable|uuid|exists:users,id',
-        ]);
-
-        $produit = Produit::find($request->produit_id);
-        if ($produit->quantite <= 0) {
-            return response()->json(['message' => 'Produit en rupture de stock'], 422);
-        }
-
-        $montant_total = $produit->prix;
-        $collaborateur = null;
-
-        if ($request->collaborateur_id) {
-            $collaboration = Collaboration::where('produit_id', $request->produit_id)
-                ->where('user_id', $request->collaborateur_id)
-                ->where('statut', 'validée')
-                ->first();
-
-            if (!$collaboration) {
-                return response()->json(['message' => 'Collaboration non valide'], 403);
-            }
-            $montant_total = $collaboration->prix_revente;
-            $collaborateur = $request->collaborateur_id;
-        }
-
-        $commande = new Commande([
-            'id' => Uuid::uuid4()->toString(),
-            'acheteur_id' => auth()->user()->id,
-            'produit_id' => $request->produit_id,
-            'commercant_id' => $produit->boutique->commercant_id,
-            'collaborateur_id' => $collaborateur,
-            'statut' => 'en_attente',
-            'montant_total' => $montant_total,
-            'paiement_statut' => 'en_attente',
-        ]);
-        $commande->save();
-
-        // Décrementer la quantité du produit
-        $produit->quantite--;
-        $produit->save();
-
-        return response()->json(['message' => 'Commande créée', 'commande' => $commande], 201);
+        $commercant = Auth::user()->commercant;
+        $produits = Produit::where('commercant_id', $commercant->id)->get();
+        return response()->json(['produits' => $produits]);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function storeProduit(Request $request)
     {
-        $request->validate([
-            'statut' => 'required|in:en_attente,livrée,litige',
+        $commercant = Auth::user()->commercant;
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
+            'photo_url' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
+            'collaboratif' => 'boolean',
+            'marge_min' => 'nullable|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'ville' => 'required|string',
         ]);
 
-        $commande = Commande::findOrFail($id);
-        if ($commande->commercant->user_id !== auth()->user()->id) {
-            return response()->json(['message' => 'Accès non autorisé'], 403);
-        }
+        $produit = Produit::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'commercant_id' => $commercant->id,
+            'category_id' => $validated['category_id'],
+            'nom' => $validated['nom'],
+            'description' => $validated['description'],
+            'prix' => $validated['prix'],
+            'photo_url' => $validated['photo_url'],
+            'collaboratif' => $validated['collaboratif'] ?? false,
+            'marge_min' => $validated['marge_min'],
+            'stock' => $validated['stock'],
+            'ville' => $validated['ville'],
+        ]);
 
-        $commande->statut = $request->statut;
-        if ($request->statut === 'livrée') {
-            $commande->paiement_statut = 'payé';
-            // Ajouter les gains au collaborateur si applicable
-            if ($commande->collaborateur_id) {
-                $collaboration = Collaboration::where('produit_id', $commande->produit_id)
-                    ->where('user_id', $commande->collaborateur_id)
-                    ->first();
-                $collaboration->gains_totaux += ($commande->montant_total - $commande->produit->prix);
-                $collaboration->save();
-            }
-        }
-        $commande->save();
+        return response()->json(['produit' => $produit], 201);
+    }
 
-        return response()->json(['message' => 'Statut de la commande mis à jour', 'commande' => $commande]);
+    public function destroyProduit($id)
+    {
+        $commercant = Auth::user()->commercant;
+        $produit = Produit::where('commercant_id', $commercant->id)->findOrFail($id);
+        $produit->delete();
+        return response()->json(['message' => 'Produit supprimé']);
+    }
+
+    public function profil()
+    {
+        $commercant = Auth::user()->commercant;
+        return response()->json(['commercant' => $commercant]);
+    }
+
+    public function updateProfil(Request $request)
+    {
+        $commercant = Auth::user()->commercant;
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'ville' => 'nullable|string',
+        ]);
+
+        $commercant->update($validated);
+        return response()->json(['commercant' => $commercant]);
     }
 }
