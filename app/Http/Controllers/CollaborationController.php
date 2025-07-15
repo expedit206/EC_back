@@ -10,6 +10,12 @@ use Ramsey\Uuid\Uuid;
 
 class CollaborationController extends Controller
 {
+    public function index()
+    {
+        $user = Auth::user();
+        $collaborations = Collaboration::with('produit')->where('user_id', $user->id)->get();
+        return response()->json(['collaborations' => $collaborations]);
+    }
     public function store(Request $request)
     {
         $request->validate([

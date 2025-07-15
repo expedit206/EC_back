@@ -37,14 +37,22 @@ class ProduitController extends Controller
             $query->where('nom', 'LIKE', '%' . $request->search . '%');
         }
 
-        $products = $query->paginate(12);
+        $produits = $query->paginate(12);
         return response()->json([
-            'data' => $products->items(),
-            'current_page' => $products->currentPage(),
-            'last_page' => $products->lastPage(),
+            'data' => $produits->items(),
+            'current_page' => $produits->currentPage(),
+            'last_page' => $produits->lastPage(),
         ]);
     }
-    
+
+
+    public function show(Produit $produit)
+    {
+        $produit = $produit->with('commercant')->firstOrFail();
+        return response()->json(['produit' => $produit]);
+    }
+
+
     public function store(Request $request)
     {
         $request->validate([
@@ -80,6 +88,4 @@ class ProduitController extends Controller
 
         return response()->json(['message' => 'Produit créé', 'produit' => $produit], 201);
     }
-
-
 }

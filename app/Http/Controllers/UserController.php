@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Panier;
 use App\Models\Parrainage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\Collaboration;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -118,5 +121,36 @@ class UserController extends Controller
     public function logout()
     {
         return response()->json(['message' => 'Déconnexion réussie'], 200);
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        $user = Auth::user();
+        $data = $request->validate([
+            'email_notifications' => 'boolean',
+            'sms_notifications' => 'boolean',
+        ]);
+
+        $user->update($data);
+        $user->load('commercant');
+
+        return response()->json(['user' => $user]);
+    }
+
+    public function badges(Request $request)
+   
+    {
+        $user = $request->user;
+
+        $panierCount = Panier::where('user_id', $user->id)->count();
+        
+        $collaborationsPending = Collaboration::where('user_id', $user->id)?->where('statut', 'en_attente')->count();
+        // return response()->json([
+        //     'panier_count' => $panierCount,
+        // ]);
+        return response()->json([
+            'panier_count' => $panierCount,
+            'collaborations_pending' => $collaborationsPending??0,
+        ]);
     }
 }

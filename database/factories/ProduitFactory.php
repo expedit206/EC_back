@@ -22,7 +22,7 @@ class ProduitFactory extends Factory
             'description' => $this->faker->optional()->paragraph(),
             'prix' => $this->faker->randomFloat(2, 500, 100000), // Prix entre 500 et 100000 FCFA
             'quantite' => $this->faker->randomFloat(5, 10), // Prix entre 500 et 100000 FCFA
-            'photo_url' => $this->faker->imageUrl(300, 300, 'products'), // URL d'image fictive
+            'photo_url' => $this->faker->imageUrl(300, 300, 'produits'), // URL d'image fictive
             'collaboratif' => $this->faker->boolean(30), // 30% de chance d'être collaboratif
             'marge_min' => $this->faker->randomFloat(2, 100, 5000), // Marge entre 100 et 5000 FCFA
             // 'stock' => $this->faker->numberBetween(0, 100),

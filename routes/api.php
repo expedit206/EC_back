@@ -2,15 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\CommercantController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\BoutiqueController;
-use App\Http\Controllers\ProduitController;
-use App\Http\Controllers\CollaborationController;
-use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\LitigeController;
+use App\Http\Controllers\PanierController;
+use App\Http\Controllers\ProduitController;
+use App\Http\Controllers\BoutiqueController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\AbonnementController;
+use App\Http\Controllers\CommercantController;
 use App\Http\Controllers\ParrainageController;
+use App\Http\Controllers\CollaborationController;
 
 
 Route::post('register', [UserController::class, 'register']);
@@ -38,8 +39,12 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::post('boutiques', [BoutiqueController::class, 'store']);
         Route::get('boutiques', [BoutiqueController::class, 'index']);
         Route::post('produits', [ProduitController::class, 'store']);
+
+
         Route::post('collaborations', [CollaborationController::class, 'store']);
         Route::patch('collaborations/{id}', [CollaborationController::class, 'update']);
+    Route::get('/collaborations', [CollaborationController::class, 'index'])->name('collaborations.index');
+        
         Route::post('commandes', [CommandeController::class, 'store']);
         Route::patch('commandes/{id}/status', [CommandeController::class, 'updateStatus']);
         Route::post('litiges', [LitigeController::class, 'store']);
@@ -52,4 +57,18 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::delete('/commercant/produits/{id}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
-    });
+
+
+    Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
+
+    
+    Route::post('/panier', [PanierController::class, 'store'])->name('panier.store');
+    
+    Route::get('/panier', [PanierController::class, 'index'])->name('panier.index');
+    Route::put('/panier/{id}', [PanierController::class, 'update'])->name('panier.update');
+    Route::delete('/panier/{id}', [PanierController::class, 'destroy'])->name('panier.destroy');
+
+    
+    Route::get('/user/badges', [UserController::class, 'badges'])->name('user.badges');
+});
+Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');

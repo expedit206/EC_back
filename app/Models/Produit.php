@@ -26,9 +26,9 @@ class Produit extends Model
         'marge_min'
     ];
 
-    public function boutique()
+    public function commercant()
     {
-        return $this->belongsTo(Boutique::class);
+        return $this->belongsTo(Commercant::class);
     }
 
     public function collaborations()
