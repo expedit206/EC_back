@@ -1,45 +1,80 @@
 <?php
-// app/Http/Controllers/CommercantController.php
+
 namespace App\Http\Controllers;
 
-use App\Models\Commercant;
+use App\Models\Produit;
 use Illuminate\Http\Request;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Auth;
 
 class CommercantController extends Controller
 {
-    public function store(Request $request)
+    public function produits(Request $request)
     {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'logo' => 'nullable|string',
-            'ville' => 'required|string|max:255',
-        ]);
+        $user = $request->user->load('commercant');
 
-        $user = auth()->user();
-
-        if ($user->commercant) {
-            return response()->json(['message' => 'Vous avez déjà un compte commerçant'], 400);
-        }
-
-        $commercant = new Commercant([
-            'id' => Uuid::uuid4()->toString(),
-            'user_id' => $user->id,
-            'nom' => $request->nom,
-            'description' => $request->description,
-            'logo' => $request->logo,
-            'ville' => $request->ville,
-            'actif' => true,
-        ]);
-        $commercant->save();
-
-        return response()->json(['message' => 'Compte commerçant créé', 'commercant' => $commercant], 201);
+        $produits = Produit::where('commercant_id', $user->commercant->id)->get();
+        return response()->json(['produits' => $produits]);
     }
 
-    public function index()
+    public function storeProduit(Request $request)
     {
-        $commercants = Commercant::with('user', 'boutiques')->get();
-        return response()->json(['commercants' => $commercants]);
+        $user = $request->user->load('commercant');
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
+            'photo_url' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
+            'collaboratif' => 'boolean',
+            'marge_min' => 'nullable|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'ville' => 'required|string',
+        ]);
+        
+        $produit = Produit::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'commercant_id' => $user->commercant->id,
+            'category_id' => $validated['category_id'],
+            'nom' => $validated['nom'],
+            'description' => $validated['description'],
+            'prix' => $validated['prix'],
+            'photo_url' => $validated['photo_url'],
+            'collaboratif' => $validated['collaboratif'] ?? false,
+            'marge_min' => $validated['marge_min'],
+            'quantite' => $validated['stock'],
+            'ville' => $validated['ville'],
+        ]);
+        // return response()->json(['request' => $user->commercant->id]);
+
+        return response()->json(['produit' => $produit], 201);
+    }
+
+    public function destroyProduit($id, Request $request )
+    {
+        $commercant = $request->user->load('commercant');
+
+        $produit = Produit::where('commercant_id', $commercant->id)->findOrFail($id);
+        $produit->delete();
+        return response()->json(['message' => 'Produit supprimé']);
+    }
+
+    public function profil(Request $request)
+    {
+        $commercant = $request->user->load('commercant');
+        return response()->json(['commercant' => $commercant]);
+    }
+    public function updateProfil(Request $request)
+    {
+        $commercant = $request->user->load('commercant');
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'ville' => 'nullable|string',
+        ]);
+
+        $commercant->update($validated);
+        return response()->json(['commercant' => $commercant]);
     }
 }

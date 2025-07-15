@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Commercant;
 use App\Models\Produit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CommercantController extends Controller
+class CommandeController extends Controller
 {
     public function produits()
     {
-        $commercant = Auth::user()->commercant;
+        $commercant = $request->user->load('commercant');
+
         $produits = Produit::where('commercant_id', $commercant->id)->get();
         return response()->json(['produits' => $produits]);
     }
 
     public function storeProduit(Request $request)
     {
-        $commercant = Auth::user()->commercant;
+        $commercant = $request->user->load('commercant');
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -50,21 +51,24 @@ class CommercantController extends Controller
 
     public function destroyProduit($id)
     {
-        $commercant = Auth::user()->commercant;
+        $commercant = $request->user->load('commercant');
+
         $produit = Produit::where('commercant_id', $commercant->id)->findOrFail($id);
         $produit->delete();
         return response()->json(['message' => 'Produit supprimé']);
     }
 
-    public function profil()
-    {
-        $commercant = Auth::user()->commercant;
-        return response()->json(['commercant' => $commercant]);
-    }
+    // public function profil(Request $request)
+    // {
+    //     return response()->json(['commercant' => 'commercant']);
+    //     $commercant = $request->user->load('commercant');
+    //     return response()->json(['commercant' => $commercant]);
+    // }
 
     public function updateProfil(Request $request)
     {
-        $commercant = Auth::user()->commercant;
+        $commercant = $request->user->load('commercant');
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',

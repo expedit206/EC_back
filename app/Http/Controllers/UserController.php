@@ -15,12 +15,13 @@ class UserController extends Controller
 {
     public function register(Request $request)
     {
+        // return response()->json(['request' => $request->all()]);
         $request->validate([
             'nom' => 'required|string|max:255',
             'telephone' => 'required|string|max:20|unique:users,telephone',
             'email' => 'nullable|email|max:255|unique:users,email',
             'ville' => 'required|string|max:255',
-            // 'mot_de_passe' => 'required|string|min:8',
+            'mot_de_passe' => 'required|string|min:8',
             'parrain_id' => 'nullable|exists:users,id',
         ]);
 
@@ -96,6 +97,7 @@ class UserController extends Controller
                 'role' => $user->role,
                 'premium' => $user->premium,
             ],
+            'token' => $token,
         ], 200);
     }
 

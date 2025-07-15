@@ -33,8 +33,8 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::get('user', [UserController::class, 'profile']);
         Route::post('logout', [UserController::class, 'logout']);
        
-        Route::post('commercants', [CommercantController::class, 'store']);
-        Route::get('commercants', [CommercantController::class, 'index']);
+        // Route::post('commercants', [CommercantController::class, 'store']);
+        // Route::get('commercants', [CommercantController::class, 'index']);
         Route::post('boutiques', [BoutiqueController::class, 'store']);
         Route::get('boutiques', [BoutiqueController::class, 'index']);
         Route::post('produits', [ProduitController::class, 'store']);
