@@ -12,17 +12,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('commandes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('produit_id');
-            $table->uuid('commercant_id'); // Changé de vendeur_id à commercant_id
-            $table->foreignId('acheteur_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
-            $table->foreign('commercant_id')->references('id')->on('commercants')->onDelete('cascade');
-            $table->foreignId('collaborateur_id')->references('id')->on('users')->onDelete('cascade');
-            $table->enum('statut', ['en_attente', 'livrée', 'litige'])->default('en_attente');
-            $table->decimal('montant_total', 10, 2);
-            $table->enum('paiement_statut', ['en_attente', 'payé', 'remboursé'])->default('en_attente');
+            $table->string('id')->primary();
+            $table->enum('status', ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'])->default('pending');
+            $table->decimal('total', 10, 2);
             $table->timestamps();
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

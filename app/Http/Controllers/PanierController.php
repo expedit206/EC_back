@@ -27,34 +27,45 @@ class PanierController extends Controller
         return response()->json(['message' => 'Quantité mise à jour']);
     }
 
-    public function destroy($id)
-    {
-        $item = Panier::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $item->delete();
-        return response()->json(['message' => 'Produit retiré']);
-    }
 
 
     public function store(Request $request)
     {
+        $user = $request->user;
         $data = $request->validate([
             'produit_id' => 'required|exists:produits,id',
         ]);
-        $user = $request->user;
+     
         $produit = Produit::findOrFail($data['produit_id']);
-        
         if ($user->commercant && $user->commercant->id === $produit->commercant_id) {
-            return response()->json(['message' => 'Vous ne pouvez pas ajouter vos propres produits au panier'], 422);
+            return response()->json(['message' => 'Vous ne pouvez pas ajouter votre propre produit au panier'], 422);
         }
-        
-        Panier::create([
-            // 'id' => \Str::uuid(),
-            'user_id' => $user->id,
-            'produit_id' => $data['produit_id'],
-            'quantite' => 1,
-        ]);
-        // return response()->json(['data' => $request->all()]);
 
-        return response()->json(['message' => 'Produit ajouté au panier']);
+        $item = Panier::where('user_id', $user->id)
+            ->where('produit_id', $data['produit_id'])
+            ->first();
+
+        if ($item) {
+            $item->update(['quantite' => $item->quantite + 1]);
+        } else {
+            $item = Panier::create([
+                'id' => \Str::uuid(),
+                'user_id' => $user->id,
+                'produit_id' => $data['produit_id'],
+                'quantite' => 1,
+            ]);
+        }
+
+        return response()->json(['message' => 'Produit ajouté au panier', 'item' => $item]);
     }
+
+    public function destroy($produit_id, Request $request)
+    {
+        $user = $request->user;
+        Panier::where('user_id', $user->id)
+            ->where('produit_id', $produit_id)
+            ->delete();
+        return response()->json(['message' => 'Produit retiré du panier']);
+    }
+
 }

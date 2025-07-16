@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Models\Boutique;
+use App\Models\Produit;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Boutique;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Commercant extends Model
 {
     use HasFactory;
@@ -20,8 +22,11 @@ class Commercant extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function boutiques()
+   
+
+    public function produits()
     {
-        return $this->hasMany(Boutique::class);
+        return $this->hasMany(Produit::class);
     }
+    
 }

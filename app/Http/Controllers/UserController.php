@@ -82,13 +82,13 @@ class UserController extends Controller
             throw ValidationException::withMessages([
                 'login' => ['Les informations d\'identification sont incorrectes.'],
             ]);
-
         }
         $token = Str::uuid();
-        $user->update(['token' => $token,
-                'token_expires_at' => Carbon::now()->addDays(7), // Expire dans 7 jours
-                ]);
-                $user->load('commercant');
+        $user->update([
+            'token' => $token,
+            'token_expires_at' => Carbon::now()->addDays(7), // Expire dans 7 jours
+        ]);
+        $user->load('commercant');
         return response()->json([
             'message' => 'Connexion réussie',
             'user' => [
@@ -112,10 +112,11 @@ class UserController extends Controller
         $user = $request->user;
         // $user = User::where('token', $token)->first();
         $user->load('commercant');
-        return response()->json([
-            'user' => $user,
-        ],
-    );
+        return response()->json(
+            [
+                'user' => $user,
+            ],
+        );
     }
 
     public function logout()
@@ -125,7 +126,7 @@ class UserController extends Controller
 
     public function updateNotifications(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user;
         $data = $request->validate([
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
@@ -137,20 +138,21 @@ class UserController extends Controller
         return response()->json(['user' => $user]);
     }
 
-    public function badges(Request $request)
-   
+    public function badges()
     {
-        $user = $request->user;
+        $user = Auth::user();
+        $panier_count = Panier::where('user_id', $user->id)->sum('quantite');
+        $collaborations_pending = Collaboration::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->get();
+        $orders_pending = Order::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->get();
 
-        $panierCount = Panier::where('user_id', $user->id)->count();
-        
-        $collaborationsPending = Collaboration::where('user_id', $user->id)?->where('statut', 'en_attente')->count();
-        // return response()->json([
-        //     'panier_count' => $panierCount,
-        // ]);
         return response()->json([
-            'panier_count' => $panierCount,
-            'collaborations_pending' => $collaborationsPending??0,
+            'panier_count' => $panier_count,
+            'collaborations_pending' => $collaborations_pending,
+            'orders_pending' => $orders_pending,
         ]);
     }
 }

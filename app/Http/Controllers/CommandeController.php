@@ -2,80 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produit;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Panier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CommandeController extends Controller
 {
-    public function produits()
+    public function store(Request $request)
     {
-        $commercant = $request->user->load('commercant');
-
-        $produits = Produit::where('commercant_id', $commercant->id)->get();
-        return response()->json(['produits' => $produits]);
-    }
-
-    public function storeProduit(Request $request)
-    {
-        $commercant = $request->user->load('commercant');
-
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'prix' => 'required|numeric|min:0',
-            'photo_url' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
-            'collaboratif' => 'boolean',
-            'marge_min' => 'nullable|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'ville' => 'required|string',
+        $user = Auth::user();
+        $data = $request->validate([
+            'items' => 'required|array',
+            'items.*.produit_id' => 'required|exists:products,id',
+            'items.*.quantite' => 'required|integer|min:1',
+            'items.*.prix' => 'required|numeric|min:0',
         ]);
 
-        $produit = Produit::create([
-            'id' => \Illuminate\Support\Str::uuid(),
-            'commercant_id' => $commercant->id,
-            'category_id' => $validated['category_id'],
-            'nom' => $validated['nom'],
-            'description' => $validated['description'],
-            'prix' => $validated['prix'],
-            'photo_url' => $validated['photo_url'],
-            'collaboratif' => $validated['collaboratif'] ?? false,
-            'marge_min' => $validated['marge_min'],
-            'stock' => $validated['stock'],
-            'ville' => $validated['ville'],
+        $total = collect($data['items'])->sum(fn($item) => $item['prix'] * $item['quantite']);
+        $order = Order::create([
+            'id' => \Str::uuid(),
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'total' => $total,
         ]);
 
-        return response()->json(['produit' => $produit], 201);
+        foreach ($data['items'] as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'produit_id' => $item['produit_id'],
+                'quantite' => $item['quantite'],
+                'prix' => $item['prix'],
+            ]);
+        }
+
+        // Vider le panier
+        Panier::where('user_id', $user->id)->delete();
+
+        return response()->json(['message' => 'Commande passée avec succès', 'order' => $order]);
     }
 
-    public function destroyProduit($id)
+    public function index()
     {
-        $commercant = $request->user->load('commercant');
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->with('items.produit')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'status' => $order->status,
+                    'created_at' => $order->created_at,
+                    'total' => $order->total,
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'produit_id' => $item->produit_id,
+                            'quantite' => $item->quantite,
+                            'prix' => $item->prix,
+                            'produit' => [
+                                'nom' => $item->produit->nom,
+                                'photo_url' => $item->produit->photo_url,
+                            ],
+                        ];
+                    }),
+                ];
+            });
 
-        $produit = Produit::where('commercant_id', $commercant->id)->findOrFail($id);
-        $produit->delete();
-        return response()->json(['message' => 'Produit supprimé']);
-    }
-
-    // public function profil(Request $request)
-    // {
-    //     return response()->json(['commercant' => 'commercant']);
-    //     $commercant = $request->user->load('commercant');
-    //     return response()->json(['commercant' => $commercant]);
-    // }
-
-    public function updateProfil(Request $request)
-    {
-        $commercant = $request->user->load('commercant');
-
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'ville' => 'nullable|string',
-        ]);
-
-        $commercant->update($validated);
-        return response()->json(['commercant' => $commercant]);
+        return response()->json($orders);
     }
 }

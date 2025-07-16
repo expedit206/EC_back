@@ -3,8 +3,12 @@
 // app/Models/Produit.php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Category;
+use App\Models\Commande;
+use App\Models\Commercant;
+use App\Models\Collaboration;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Produit extends Model
 {
@@ -39,5 +43,10 @@ class Produit extends Model
     public function commandes()
     {
         return $this->hasMany(Commande::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }

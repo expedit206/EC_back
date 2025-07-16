@@ -47,6 +47,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         
         Route::post('commandes', [CommandeController::class, 'store']);
         Route::patch('commandes/{id}/status', [CommandeController::class, 'updateStatus']);
+        
         Route::post('litiges', [LitigeController::class, 'store']);
         Route::patch('litiges/{id}', [LitigeController::class, 'update']);
         // Route::post('abonnements', [AbonnementController::class, 'store']);
@@ -54,10 +55,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
     Route::get('/commercant/produits', [CommercantController::class, 'produits'])->name('commercant.produits');
     Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store');
-    Route::delete('/commercant/produits/{id}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
+    Route::delete('/commercant/produits/{produit}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
-
+    Route::put('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
 
     Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
 

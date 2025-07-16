@@ -10,39 +10,41 @@ use Ramsey\Uuid\Uuid;
 
 class CollaborationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
+        // $user = $request->user;
+        $user = $request->user;
         $collaborations = Collaboration::with('produit')->where('user_id', $user->id)->get();
         return response()->json(['collaborations' => $collaborations]);
     }
     public function store(Request $request)
     {
-        $request->validate([
+       $data =  $request->validate([
             'produit_id' => 'required|uuid|exists:produits,id',
             'prix_revente' => 'required|numeric|min:0',
         ]);
-
-        $produit = Produit::find($request->produit_id);
+$user = $request->user;
+        // $produit = Produit::findOrFail($request->produit_id);
+        $produit = Produit::findOrFail($data['produit_id']);
+        if ($user->commercant && $user->commercant->id === $produit->commercant_id) {
+            return response()->json(['message' => 'Vous ne pouvez pas collaborer sur votre propre produit'], 422);
+        }
         if (!$produit->collaboratif) {
-            return response()->json(['message' => 'Ce produit ne permet pas la collaboration'], 403);
+            return response()->json(['message' => 'Ce produit n’est pas ouvert à la collaboration'], 422);
+        }
+        if ($data['prix_revente'] < $produit->prix + ($produit->marge_min ?? 0)) {
+            return response()->json(['message' => 'Le prix de revente est trop bas'], 422);
         }
 
-        if ($request->prix_revente < $produit->prix + $produit->marge_min) {
-            return response()->json(['message' => 'Le prix de revente est inférieur à la marge minimale'], 422);
-        }
-
-        $collaboration = new Collaboration([
-            'id' => Uuid::uuid4()->toString(),
-            'produit_id' => $request->produit_id,
-            'user_id' => auth()->user()->id,
-            'prix_revente' => $request->prix_revente,
-            'statut' => 'en_attente',
-            'gains_totaux' => 0,
+        $collaboration = Collaboration::create([
+            'id' => \Str::uuid(),
+            'user_id' => $user->id,
+            'produit_id' => $data['produit_id'],
+            'prix_revente' => $data['prix_revente'],
+            'status' => 'pending',
         ]);
-        $collaboration->save();
 
-        return response()->json(['message' => 'Demande de collaboration envoyée', 'collaboration' => $collaboration], 201);
+        return response()->json(['message' => 'Demande de collaboration envoyée', 'collaboration' => $collaboration]);
     }
 
     public function update(Request $request, $id)

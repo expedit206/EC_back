@@ -48,7 +48,7 @@ class ProduitController extends Controller
 
     public function show(Produit $produit)
     {
-        $produit = $produit->with('commercant')->firstOrFail();
+        $produit = $produit->load('commercant');
         return response()->json(['produit' => $produit]);
     }
 
