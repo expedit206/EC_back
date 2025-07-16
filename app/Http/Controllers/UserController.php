@@ -145,7 +145,7 @@ class UserController extends Controller
         $collaborations_pending = Collaboration::where('user_id', $user->id)
             ->where('status', 'pending')
             ->get();
-        $orders_pending = Order::where('user_id', $user->id)
+        $orders_pending = Commande::where('user_id', $user->id)
             ->where('status', 'pending')
             ->get();
 

@@ -45,6 +45,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::patch('collaborations/{id}', [CollaborationController::class, 'update']);
     Route::get('/collaborations', [CollaborationController::class, 'index'])->name('collaborations.index');
         
+        Route::get('commandes', [CommandeController::class, 'index']);
         Route::post('commandes', [CommandeController::class, 'store']);
         Route::patch('commandes/{id}/status', [CommandeController::class, 'updateStatus']);
         

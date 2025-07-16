@@ -14,6 +14,17 @@ class Commande extends Model
 
     protected $fillable = ['id', 'user_id', 'status', 'total'];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (!$model->getKey()) {
+                $model->{$model->getKeyName()} = (string) \Str::uuid();
+            }
+        });
+    }
+    
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -21,6 +32,6 @@ class Commande extends Model
 
     public function items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(CommandeProduit::class);
     }
 }

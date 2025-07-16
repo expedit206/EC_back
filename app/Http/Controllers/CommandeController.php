@@ -3,38 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Panier;
+use App\Models\Commande;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\CommandeProduit;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CommandeController extends Controller
 {
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $data = $request->validate([
+        $user = $request->user;
+                $data = $request->validate([
             'items' => 'required|array',
-            'items.*.produit_id' => 'required|exists:products,id',
+            'items.*.produit_id' => 'required|exists:produits,id',
             'items.*.quantite' => 'required|integer|min:1',
             'items.*.prix' => 'required|numeric|min:0',
         ]);
-
+        
         $total = collect($data['items'])->sum(fn($item) => $item['prix'] * $item['quantite']);
-        $order = Order::create([
-            'id' => \Str::uuid(),
+        $order = Commande::create([
             'user_id' => $user->id,
             'status' => 'pending',
             'total' => $total,
         ]);
-
+        
         foreach ($data['items'] as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
+            CommandeProduit::create([
+                //uuid
+                'commande_id' => $order->id,
                 'produit_id' => $item['produit_id'],
                 'quantite' => $item['quantite'],
                 'prix' => $item['prix'],
             ]);
+            // return response()->json(['message' => $item['produit_id']]);
         }
 
         // Vider le panier
@@ -43,10 +47,10 @@ class CommandeController extends Controller
         return response()->json(['message' => 'Commande passée avec succès', 'order' => $order]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        $orders = Order::where('user_id', $user->id)
+        $user = $request->user;
+        $orders = Commande::where('user_id', $user->id)
             ->with('items.produit')
             ->get()
             ->map(function ($order) {
