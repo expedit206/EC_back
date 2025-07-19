@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LitigeController;
@@ -13,7 +14,10 @@ use App\Http\Controllers\CommercantController;
 use App\Http\Controllers\ParrainageController;
 use App\Http\Controllers\CollaborationController;
 
-
+Route::get('/redis-test', function () {
+    Redis::set('test_key', 'Hello Redis!');
+    return Redis::get('test_key'); // Doit retourner "Hello Redis!"
+});
 Route::post('register', [UserController::class, 'register']);
 Route::middleware('guest')->group(function () {
 Route::post('login', [UserController::class, 'login']);
@@ -29,8 +33,9 @@ Route::post('login', [UserController::class, 'login']);
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     // Routes protégées
-    Route::get('produits', [ProduitController::class, 'index']);
+    // Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('auth.token')->group(function () {
+        Route::get('produits', [ProduitController::class, 'index']);
         Route::get('user', [UserController::class, 'profile']);
         Route::post('logout', [UserController::class, 'logout']);
        
@@ -72,5 +77,8 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
     
     Route::get('/user/badges', [UserController::class, 'badges'])->name('user.badges');
+
+
+    Route::post('/produits/{id}/favorite', [ProduitController::class, 'toggleFavorite']);
+    Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');
 });
-Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');

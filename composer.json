@@ -9,6 +9,7 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "predis/predis": "^3.0",
         "ramsey/uuid": "^4.9",
         "tymon/jwt-auth": "^2.2"
     },

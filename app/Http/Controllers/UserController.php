@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Panier;
+use App\Models\Commande;
 use App\Models\Parrainage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -138,13 +139,16 @@ class UserController extends Controller
         return response()->json(['user' => $user]);
     }
 
-    public function badges()
+    public function badges(Request $request)
     {
-        $user = Auth::user();
+        $user =$request->user;
         $panier_count = Panier::where('user_id', $user->id)->sum('quantite');
+        
         $collaborations_pending = Collaboration::where('user_id', $user->id)
-            ->where('status', 'pending')
+            ->where('statut', 'en_attente')
             ->get();
+
+            
         $orders_pending = Commande::where('user_id', $user->id)
             ->where('status', 'pending')
             ->get();
