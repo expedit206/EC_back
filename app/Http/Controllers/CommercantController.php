@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produit;
+use App\Models\Commercant;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\ProductFavorite;
 use App\Http\Controllers\Controller;
 
 class CommercantController extends Controller
@@ -12,11 +14,16 @@ class CommercantController extends Controller
     public function produits(Request $request)
     {
         $user = $request->user->load('commercant');
-
+        // return response()->json($);
         if (!$user->commercant) {
             return response()->json(['message' => 'Accès réservé aux commerçants'], 403);
         }
-        $produits = Produit::where('commercant_id', $user->commercant->id)->with('category')->get();
+
+        $produits = Produit::where('commercant_id', $user->commercant->id)
+            ->with('category')
+            ->withCount('favorites') // Charger le nombre de favoris
+            ->withCount('views')    // Charger le nombre de vues
+            ->get();
         // return response()->json(['produits' => 'produits']);
         return response()->json(['produits' => $produits]);
     }
@@ -68,9 +75,15 @@ class CommercantController extends Controller
 
     public function profil(Request $request)
     {
-        $commercant = $request->user->load('commercant');
+        $commercant = $request->user->load('commercant',);
         return response()->json(['commercant' => $commercant]);
     }
+
+    public function show(Commercant $commercant)
+{
+    return response()->json(['commercant' =>  $commercant]);
+}
+    
     public function updateProfil(Request $request)
     {
         $commercant = $request->user->load('commercant');

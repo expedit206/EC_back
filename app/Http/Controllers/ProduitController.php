@@ -15,6 +15,7 @@ class ProduitController extends Controller
 {
     public function index(Request $request)
     {
+        // return response()->json(['message' => 'Invalid request']);
         $sort = $request->query('sort', 'random');
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search');
@@ -24,12 +25,14 @@ class ProduitController extends Controller
         $ville = $request->query('ville');
         $collaboratif = $request->query('collaboratif');
         $user = $request->user;
+//return perpage
+// return response()->json(['per_page' => $perPage]);
+
 
         $query = Produit::query()
-            ->with(['commercant', 'category']);
-            // ->withCount('favorites');    
-            // ->withCount('view');
-
+            ->with(['commercant', 'category'])
+            ->withCount('favorites')    
+            ->withCount('views');
         // Filtres
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -54,25 +57,39 @@ class ProduitController extends Controller
         }
 
         // Tri
+        $query->inRandomOrder();
         if ($sort === 'popular') {
-            $query->withCount('views')->orderBy('views_count', 'desc');
+            $query->orderBy('views_count', 'desc');
         } elseif ($sort === 'favorites') {
             $query->orderBy('favorites_count', 'desc');
-        } else {
-            $query->inRandomOrder();
         }
 
-        $produits = $query->paginate($perPage);
+        if($perPage == 'all'){
+            // return response()->json(['per_page' => $perPage]);
+
+            $produits = $query->get();
+
+            $favoritedProductIds = $user
+                ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray()
+                : [];
+            // Ajouter is_favorited_by à chaque produit
+            $produits->each(function ($produit) use ($favoritedProductIds) {
+                $produit->is_favorited_by = in_array($produit->id, $favoritedProductIds);
+            });
+        }else{
+
+            $produits = $query->paginate($perPage);
+            $favoritedProductIds = $user
+                ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray()
+                : [];
+                
+                // Ajouter is_favorited_by à chaque produit
+                $produits->getCollection()->each(function ($produit) use ($favoritedProductIds) {
+                $produit->is_favorited_by = in_array($produit->id, $favoritedProductIds);
+            });
+        }
 
         // Charger les IDs des produits favoris par l'utilisateur
-        $favoritedProductIds = $user
-            ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray()
-            : [];
-            
-            // Ajouter is_favorited_by à chaque produit
-            $produits->getCollection()->each(function ($produit) use ($favoritedProductIds) {
-            $produit->is_favorited_by = in_array($produit->id, $favoritedProductIds);
-        });
 
         return response()->json($produits);
     }

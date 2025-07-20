@@ -38,11 +38,8 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::get('produits', [ProduitController::class, 'index']);
         Route::get('user', [UserController::class, 'profile']);
         Route::post('logout', [UserController::class, 'logout']);
-       
-        // Route::post('commercants', [CommercantController::class, 'store']);
-        // Route::get('commercants', [CommercantController::class, 'index']);
-        Route::post('boutiques', [BoutiqueController::class, 'store']);
-        Route::get('boutiques', [BoutiqueController::class, 'index']);
+        
+        
         Route::post('produits', [ProduitController::class, 'store']);
 
 
@@ -65,6 +62,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
     Route::put('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
+    Route::get('/commercant/{commercant}', [CommercantController::class, 'show'])->name('commercant.show');
 
     Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
 
