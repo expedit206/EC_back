@@ -79,4 +79,12 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
     Route::post('/produits/{id}/favorite', [ProduitController::class, 'toggleFavorite']);
     Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');
+
+
+    Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
+    Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
+    // ... autres routes
+        Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
+    Route::post('/parrainages/validate/{userId}', [ParrainageController::class, 'validateParrainage']);
+    Route::get('/parrainages/dashboard', [ParrainageController::class, 'getParrainageDashboard']);
 });

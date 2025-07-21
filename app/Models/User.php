@@ -8,7 +8,9 @@ use App\Models\Commande;
 use App\Models\Abonnement;
 use App\Models\Commercant;
 use App\Models\Parrainage;
+use Illuminate\Support\Str;
 use App\Models\Collaboration;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -30,6 +32,7 @@ class User extends Authenticatable
         'premium',
         'parrain_id',
         'token',
+        'parrainage_code',
     ];
 
     protected $hidden = [
@@ -40,6 +43,7 @@ class User extends Authenticatable
     {
         return $this->mot_de_passe;
     }
+    
     public function commercant()
     {
         return $this->hasOne(Commercant::class);
@@ -79,4 +83,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Litige::class);
     }
+ 
+  
+
 }

@@ -13,6 +13,7 @@ class CreateUsersTable extends Migration
             $table->string('nom');
             $table->string('email')->nullable()->unique();
             $table->string('telephone')->unique();
+            $table->string('parrainage_code', 50)->nullable()->unique();
             $table->string('ville');
             $table->string('mot_de_passe');
             $table->string('photo')->nullable();
@@ -24,7 +25,6 @@ class CreateUsersTable extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
-            $table->string('code_parrainage')->unique()->nullable();
             $table->decimal('solde', 10, 2)->default(0);
             $table->string('token')->nullable()->unique();
             $table->timestamp('token_expires_at')->nullable();

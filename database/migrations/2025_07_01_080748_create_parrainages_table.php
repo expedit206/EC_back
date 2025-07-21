@@ -12,13 +12,16 @@ return new class extends Migration
     public function up()
     {
         Schema::create('parrainages', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignId('parrain_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreignId('filleul_id')->references('id')->on('users')->onDelete('cascade');
-            $table->integer('niveau')->default(1);
-            $table->decimal('recompense', 10, 2)->default(0);
-            $table->timestamps();
-        });
+                $table->id();
+                $table->enum('statut', ['pending', 'active', 'rejected'])->default('pending');
+                $table->decimal('gains', 10, 2)->default(0.00);
+                $table->timestamp('date_activation')->nullable();
+                
+                $table->foreignId('parrain_id')->references('id')->on('users')->onDelete('cascade');
+                $table->foreignId('filleul_id')->references('id')->on('users')->onDelete('cascade');
+                $table->unique(['parrain_id', 'filleul_id']);
+                $table->timestamps();
+            });
     }
 
     /**
