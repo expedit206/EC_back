@@ -9,16 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('abonnements', function (Blueprint $table) {
+        Schema::create('boosts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('produit_id')->nullable()->constrained('produits')->onDelete('set null');
+            
+            $table->timestamp('start_date');
+            $table->timestamp('end_date')->nullable();
+
             $table->string('type');
-            $table->date('debut');
-            $table->date('fin')->nullable();
-            $table->boolean('actif')->default(true);
-            $table->integer('cout_jetons')->default(200); // Coût par défaut pour Premium
+            $table->string('statut')->default('actif');
+            $table->integer('cout_jetons')->default(50); // Coût par défaut
             $table->timestamps();
         });
     }
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('abonnements');
+        Schema::dropIfExists('boosts');
     }
 };

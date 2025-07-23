@@ -25,6 +25,8 @@ class CreateUsersTable extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
+            $table->string('abonnement_type')->default('gratuit'); // Valeurs possibles : gratuit, premium, <pro></pro>
+            $table->unsignedInteger('jetons')->default(0); // Solde en Jetons
             $table->decimal('solde', 10, 2)->default(0);
             $table->string('token')->nullable()->unique();
             $table->timestamp('token_expires_at')->nullable();

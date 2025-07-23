@@ -3,12 +3,8 @@
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\LitigeController;
-use App\Http\Controllers\PanierController;
 use App\Http\Controllers\ProduitController;
-use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\CommercantController;
 use App\Http\Controllers\ParrainageController;
@@ -47,12 +43,6 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
         Route::patch('collaborations/{id}', [CollaborationController::class, 'update']);
     Route::get('/collaborations', [CollaborationController::class, 'index'])->name('collaborations.index');
         
-        Route::get('commandes', [CommandeController::class, 'index']);
-        Route::post('commandes', [CommandeController::class, 'store']);
-        Route::patch('commandes/{id}/status', [CommandeController::class, 'updateStatus']);
-        
-        Route::post('litiges', [LitigeController::class, 'store']);
-        Route::patch('litiges/{id}', [LitigeController::class, 'update']);
         // Route::post('abonnements', [AbonnementController::class, 'store']);
         Route::post('parrainages', [ParrainageController::class, 'store']);
 
@@ -66,12 +56,6 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
     Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
 
-    
-    Route::post('/panier', [PanierController::class, 'store'])->name('panier.store');
-    
-    Route::get('/panier', [PanierController::class, 'index'])->name('panier.index');
-    Route::put('/panier/{id}', [PanierController::class, 'update'])->name('panier.update');
-    Route::delete('/panier/{id}', [PanierController::class, 'destroy'])->name('panier.destroy');
 
     
     Route::get('/user/badges', [UserController::class, 'badges'])->name('user.badges');
@@ -81,10 +65,12 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');
 
 
-    Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
-    Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
-    // ... autres routes
-        Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
-    Route::post('/parrainages/validate/{userId}', [ParrainageController::class, 'validateParrainage']);
-    Route::get('/parrainages/dashboard', [ParrainageController::class, 'getParrainageDashboard']);
+    // Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
+    // Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
+    // // ... autres routes
+    //     Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
+    // Route::post('/parrainages/validate/{userId}', [ParrainageController::class, 'validateParrainage']);
+    // Route::get('/parrainages/dashboard', [ParrainageController::class, 'getParrainageDashboard']);
+
+    Route::post('/produits/{id}/boost', [ProduitController::class, 'boost']);
 });

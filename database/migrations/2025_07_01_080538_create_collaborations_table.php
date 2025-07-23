@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('collaborations', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('produit_id');
             $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');

@@ -2,15 +2,10 @@
 // app/Models/User.php
 namespace App\Models;
 
-use App\Models\Litige;
-use App\Models\Boutique;
-use App\Models\Commande;
 use App\Models\Abonnement;
 use App\Models\Commercant;
 use App\Models\Parrainage;
-use Illuminate\Support\Str;
 use App\Models\Collaboration;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -33,6 +28,7 @@ class User extends Authenticatable
         'parrain_id',
         'token',
         'parrainage_code',
+        'jetons',
     ];
 
     protected $hidden = [
@@ -49,20 +45,12 @@ class User extends Authenticatable
         return $this->hasOne(Commercant::class);
     }
 
-    public function boutiques()
-    {
-        return $this->hasManyThrough(Boutique::class, Commercant::class, 'user_id', 'commercant_id');
-    }
-
     public function collaborations()
     {
         return $this->hasMany(Collaboration::class);
     }
 
-    public function commandesAcheteur()
-    {
-        return $this->hasMany(Commande::class, 'acheteur_id');
-    }
+
 
     public function filleuls()
     {
@@ -79,11 +67,15 @@ class User extends Authenticatable
         return $this->hasMany(Abonnement::class);
     }
 
-    public function litiges()
+
+    public function jetonsTransactions()
     {
-        return $this->hasMany(Litige::class);
+        return $this->hasMany(JetonsTransaction::class);
     }
- 
-  
+
+    public function boosts()
+    {
+        return $this->hasMany(Boost::class);
+    }
 
 }

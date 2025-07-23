@@ -3,22 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Panier;
-use App\Models\Commande;
 use App\Models\Parrainage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Collaboration;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
     public function register(Request $request)
-    {
+    {   
         // return response()->json(['request' => $request->all()]);
         $request->validate([
             'nom' => 'required|string|max:255',
@@ -142,21 +139,16 @@ class UserController extends Controller
     public function badges(Request $request)
     {
         $user =$request->user;
-        $panier_count = Panier::where('user_id', $user->id)->sum('quantite');
         
         $collaborations_pending = Collaboration::where('user_id', $user->id)
             ->where('statut', 'en_attente')
             ->get();
 
             
-        $orders_pending = Commande::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->get();
+      
 
         return response()->json([
-            'panier_count' => $panier_count,
             'collaborations_pending' => $collaborations_pending,
-            'orders_pending' => $orders_pending,
         ]);
     }
 }

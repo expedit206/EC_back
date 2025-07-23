@@ -5,7 +5,6 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\Category;
-use App\Models\Commande;
 use App\Models\Commercant;
 use App\Models\ProductView;
 use App\Models\Collaboration;
@@ -33,7 +32,11 @@ class Produit extends Model
         'collaboratif',
         'marge_min'
     ];
-    protected $appends = ['favorites_count', 'views_count'];
+    // protected $appends = ['favorites_count', 'views_count'];
+    
+    
+
+    
     
     public function commercant()
     {
@@ -49,11 +52,7 @@ class Produit extends Model
         return $this->hasMany(Collaboration::class);
     }
 
-    public function commandes()
-    {
-        return $this->hasMany(Commande::class);
-    }
-
+  
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -83,6 +82,10 @@ class Produit extends Model
         return $this->hasMany(ProductFavorite::class);
     }
 
- 
+
+    public function boosts()
+    {
+        return $this->hasMany(Boost::class, 'produit_id');
+    }
 
 }

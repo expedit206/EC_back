@@ -1,1 +1,7 @@
-gerer l'auth
+gerer l'auth// Tri avec priorité aux boosts
+// $query->orderByRaw('
+// CASE
+// WHEN boosts.id IS NOT NULL THEN RAND() * 0.9 + 0.1
+// ELSE RAND()
+// END DESC
+// ');
