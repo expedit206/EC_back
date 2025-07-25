@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignUuid('produit_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->index(['produit_id', 'user_id']);
             $table->timestamps();
         });
     }
@@ -24,6 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIndex(['produit_id', 'user_id']);
         Schema::dropIfExists('product_favorites');
     }
 };

@@ -4,6 +4,7 @@
 namespace App\Models;
 
 use App\Models\User;
+use App\Models\Boost;
 use App\Models\Category;
 use App\Models\Commercant;
 use App\Models\ProductView;
@@ -36,7 +37,7 @@ class Produit extends Model
     
     
 
-    
+
     
     public function commercant()
     {
@@ -88,4 +89,14 @@ class Produit extends Model
         return $this->hasMany(Boost::class, 'produit_id');
     }
 
+    public function counts()
+    {
+        return $this->hasOne(\App\Models\ProductCount::class, 'produit_id', 'id');
+    }
+
+
+    public function counts()
+    {
+        return $this->hasOne(\App\Models\ProductCount::class, 'produit_id', 'id');
+    }
 }

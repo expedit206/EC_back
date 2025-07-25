@@ -13,7 +13,6 @@ use App\Models\JetonsTransaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redis;
 
-use App\Jobs\RecordProductView;
 class ProduitController extends Controller
 {
 
@@ -27,22 +26,21 @@ class ProduitController extends Controller
         $prixMax = $request->query('prix_max');
         $ville = $request->query('ville', $request->user()?->ville);
         $collaboratif = $request->query('collaboratif');
-        $user = $request->user();
+        $user = $request->user;
         $page = $request->query('page', 1);
 
         $viewedProductIds = $user ? ProductView::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
         $favoriteProductIds = $user ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
 
         $query = Produit::query()
-            ->with(['commercant', 'category', 'counts'])
+            ->with(['commercant', 'category'])
             ->select('produits.*')
-            ->leftJoin('product_counts', 'product_counts.produit_id', '=', 'produits.id')
             ->selectRaw(
                 '
-            COALESCE(product_counts.views_count, 0) as raw_views_count,
-            COALESCE(product_counts.favorites_count, 0) as favorites_count,
-            (0.24 * COALESCE(product_counts.views_count, 0) + 
-             0.25 * COALESCE(product_counts.favorites_count, 0) + 
+            (SELECT COUNT(*) FROM product_views WHERE product_views.produit_id = produits.id) as raw_views_count,
+            (SELECT COUNT(*) FROM product_favorites WHERE product_favorites.produit_id = produits.id) as favorites_count,
+            (0.24 * (SELECT COUNT(*) FROM product_views WHERE product_views.produit_id = produits.id) + 
+             0.25 * (SELECT COUNT(*) FROM product_favorites WHERE product_favorites.produit_id = produits.id) + 
              0.26 * (CASE WHEN EXISTS (
                  SELECT 1 FROM boosts
                  WHERE boosts.produit_id = produits.id
@@ -87,14 +85,24 @@ class ProduitController extends Controller
             $produits = $query->paginate($perPage, ['*'], 'page', $page);
         }
 
-        // Déclencher l'enregistrement des vues en arrière-plan
+        // Enregistrer les vues pour l'utilisateur connecté
         if ($user) {
             $newViewedProductIds = $produits->pluck('id')->diff($viewedProductIds)->values();
             foreach ($newViewedProductIds as $productId) {
-                RecordProductView::dispatch($user->id, $productId)->onQueue('views');
+                $redisKey = "view:user:{$user->id}:product:{$productId}";
+                if (Redis::get($redisKey) === null) {
+                    $productViewKey = "produit:views:{$productId}";
+                    Redis::incr($productViewKey); // Incrémente le compteur global
+                    Redis::set($redisKey, 1); // Marque comme vu
+                    Redis::expire($redisKey, 86400); // Expire après 24h (optionnel)
+
+                    // Optionnel : Synchronisation avec la base
+                    $this->syncViewsToDatabase($productId);
+                }
             }
         }
 
+        // Appliquer la logique de vues depuis Redis au niveau des instances
         $favoritedProductIds = $user ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
 
         if ($perPage === null) {
@@ -120,6 +128,18 @@ class ProduitController extends Controller
         }
 
         return response()->json($produits);
+    }
+
+    protected function syncViewsToDatabase($productId)
+    {
+        $viewCount = Redis::get("produit:views:{$productId}");
+        if ($viewCount && $viewCount > 0) {
+            ProductView::updateOrCreate(
+                ['produit_id' => $productId],
+                ['views_count' => $viewCount, 'updated_at' => now()]
+            );
+            Redis::del("produit:views:{$productId}");
+        }
     }
   public function recordView(Request $request)
 {

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignUuid('produit_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('session_id')->nullable(); // Pour utilisateurs non connectés
+            // $table->string('session_id')->nullable(); // Pour utilisateurs non connectés
+            $table->index(['produit_id', 'user_id']);
             $table->timestamps();
         });
     }
@@ -25,6 +26,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIndex(['produit_id', 'user_id']);
+
         Schema::dropIfExists('product_views');
     }
 };

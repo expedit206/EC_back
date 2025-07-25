@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('statut')->default('actif');
             $table->integer('cout_jetons')->default(50); // Coût par défaut
+            $table->index(['produit_id', 'statut', 'end_date']);
             $table->timestamps();
         });
     }
@@ -31,6 +32,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIndex(['produit_id', 'statut', 'end_date']);
         Schema::dropIfExists('boosts');
+        
     }
 };

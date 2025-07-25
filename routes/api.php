@@ -73,4 +73,5 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     // Route::get('/parrainages/dashboard', [ParrainageController::class, 'getParrainageDashboard']);
 
     Route::post('/produits/{id}/boost', [ProduitController::class, 'boost']);
+    Route::post('/record_view', [ProduitController::class, 'recordView']);
 });
