@@ -3,7 +3,6 @@
 use App\Http\Middleware\AuthToken;
 
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Schedule;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -51,7 +50,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function ($schedule): void {
         // $schedule->command('product:counts')->hourly(); // Exécute la commande toutes les heures
     })
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->call(new UpdateProductCounts)->daily();
-    })
+  
         ->create();

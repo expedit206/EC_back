@@ -8,6 +8,7 @@ use App\Models\Boost;
 use App\Models\Category;
 use App\Models\Commercant;
 use App\Models\ProductView;
+use App\Models\ProductCount;
 use App\Models\Collaboration;
 use App\Models\ProductFavorite;
 use Illuminate\Support\Facades\Redis;
@@ -91,12 +92,8 @@ class Produit extends Model
 
     public function counts()
     {
-        return $this->hasOne(\App\Models\ProductCount::class, 'produit_id', 'id');
+        return $this->hasOne(ProductCount::class, 'produit_id', 'id');
     }
 
 
-    public function counts()
-    {
-        return $this->hasOne(\App\Models\ProductCount::class, 'produit_id', 'id');
-    }
 }

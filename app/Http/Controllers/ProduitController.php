@@ -8,12 +8,14 @@ use App\Models\Produit;
 use App\Models\Commercant;
 use App\Models\ProductView;
 use Illuminate\Http\Request;
+use App\Jobs\RecordProductView;
 use App\Models\ProductFavorite;
 use App\Models\JetonsTransaction;
+use Illuminate\Support\Facades\DB;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redis;
 
-use App\Jobs\RecordProductView;
 class ProduitController extends Controller
 {
 
@@ -25,9 +27,9 @@ class ProduitController extends Controller
         $category = $request->query('category');
         $prixMin = $request->query('prix_min');
         $prixMax = $request->query('prix_max');
-        $ville = $request->query('ville', $request->user()?->ville);
+        $ville = $request->query('ville', $request->use?->ville);
         $collaboratif = $request->query('collaboratif');
-        $user = $request->user();
+        $user = $request->user;
         $page = $request->query('page', 1);
 
         $viewedProductIds = $user ? ProductView::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
@@ -87,14 +89,6 @@ class ProduitController extends Controller
             $produits = $query->paginate($perPage, ['*'], 'page', $page);
         }
 
-        // Déclencher l'enregistrement des vues en arrière-plan
-        if ($user) {
-            $newViewedProductIds = $produits->pluck('id')->diff($viewedProductIds)->values();
-            foreach ($newViewedProductIds as $productId) {
-                RecordProductView::dispatch($user->id, $productId)->onQueue('views');
-            }
-        }
-
         $favoritedProductIds = $user ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
 
         if ($perPage === null) {
@@ -121,40 +115,47 @@ class ProduitController extends Controller
 
         return response()->json($produits);
     }
-  public function recordView(Request $request)
-{
-    $validated = $request->validate([
-        'product_id' => 'required|uuid|exists:produits,id',
-        'user_id' => 'required|exists:users,id',
-    ]);
+    public function recordView(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|uuid|exists:produits,id',
+            'user_id' => 'required|exists:users,id',
+        ]);
 
-    $redisKey = "view:user:{$validated['user_id']}:product:{$validated['product_id']}";
-    if (Redis::get($redisKey) === null) {
-        // Première vue pour cet utilisateur et ce produit
-        $productViewKey = "produit:views:{$validated['product_id']}";
-        Redis::incr($productViewKey); // Incrémente le compteur global
-        Redis::set($redisKey, 1); // Marque comme vu
-        Redis::expire($redisKey, 86400); // Expire après 24h (optionnel)
+        $produitId = $validated['product_id'];
+        $userId = $validated['user_id'];
+        $redisKey = "view:user:{$userId}:product:{$produitId}";
 
-        // Optionnel : Synchronisation avec la base
-        $this->syncViewsToDatabase($validated['product_id'],$validated["user_id"]);
+        if (Redis::get($redisKey) === null) {
+            // Première vue pour cet utilisateur et ce produit
+            $productViewKey = "produit:views:{$produitId}";
+            Redis::incr($productViewKey); // Incrémente le compteur temporaire dans Redis
+            Redis::set($redisKey, 1); // Marque comme vu
+            Redis::expire($redisKey, 86400); // Expire après 24h
+
+            // Synchronisation immédiate avec product_counts
+            $this->syncViewsToDatabase($produitId);
+        }
+
+        return response()->json(['message' => 'Vue enregistrée']);
     }
 
-    return response()->json(['message' => 'Vue enregistrée']);
-}
+    protected function syncViewsToDatabase($productId)
+    {
+        $viewCount = Redis::get("produit:views:{$productId}");
+        if ($viewCount && $viewCount > 0) {
+            // Mettre à jour ou créer l'entrée dans product_counts
+            $produit = Produit::find($productId);
+            $produit->counts()->updateOrCreate(
+                ['produit_id' => $productId],
+                ['views_count' => $viewCount]
+            );
+            // Réinitialiser le compteur Redis après synchronisation
+            Redis::del("produit:views:{$productId}");
+        }
 
-protected function syncViewsToDatabase($productId, $userId)
-{
-    $viewCount = Redis::get("produit:views:{$productId}");
-    if ($viewCount && $viewCount > 0) {
-        ProductView::Create(
-            ['user_id' => $userId],
-            ['produit_id' => $productId],
-            // ['views_count' => $viewCount, 'updated_at' => now()]
-        );
-        Redis::del("produit:views:{$productId}");
     }
-}
+    
     public function show($id, Request $request)
     {
         $user = $request->user;
@@ -187,30 +188,50 @@ protected function syncViewsToDatabase($productId, $userId)
         return response()->json(['produit' => $produit]);
     }
 
+
     public function toggleFavorite($id, Request $request)
     {
+        // Validation de l'ID
         $produit = Produit::findOrFail($id);
+
+        // Récupérer l'utilisateur authentifié
         $user = $request->user;
-        
+
         if (!$user) {
             return response()->json(['message' => 'Connexion requise'], 401);
         }
-        
+
         $favorite = ProductFavorite::where('produit_id', $id)
-        ->where('user_id', $user->id)
-        ->first();
-        
-        if ($favorite) {
-            $favorite->delete();
-            return response()->json(['message' => 'Produit retiré des favoris']);
+            ->where('user_id', $user->id)
+            ->first();
+            // Supprimer le favori
+            
+            if ($favorite) {
+                $favorite->delete();
+                
+          
+                $produit->counts()->updateOrCreate(
+                    ['produit_id' => $id],
+                    ['favorites_count' => DB::raw('favorites_count-1')]
+                );
+                return response()->json(['message' => 'Produit retiré des favoris']);
+
         } else {
+            // Ajouter le favori
             ProductFavorite::create([
                 'produit_id' => $id,
                 'user_id' => $user->id,
             ]);
-            // return response()->json(['produit' => $produit]);
+            
+            // Incrémenter favorites_count dans product_counts
+            $produit->counts()->updateOrCreate(
+                ['produit_id' => $id],
+                ['favorites_count' => DB::raw('favorites_count + 1')]
+            );
             return response()->json(['message' => 'Produit ajouté aux favoris']);
+
         }
+
     }
 
     public function store(Request $request)
