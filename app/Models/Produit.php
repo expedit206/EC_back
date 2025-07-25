@@ -66,11 +66,11 @@ class Produit extends Model
         return $this->hasMany(ProductView::class);
     }
 
-    public function getViewsCountAttribute()
-    {
-        $key = "produit:views:{$this->id}";
-        return Redis::get($key) ?? $this->views()->count();
-    }
+    // public function getViewsCountAttribute()
+    // {
+    //     $key = "produit:views:{$this->id}";
+    //     return Redis::get($key) ?? $this->views()->count();
+    // }
 
 
     public function getFavoritesCountAttribute()

@@ -21,6 +21,7 @@ class ProduitController extends Controller
 
     public function index(Request $request)
     {
+        // return response()->json(['message' => $request->all()]);
         $sort = $request->query('sort', 'default');
         $perPage = $request->query('per_page', 10) === 'all' ? null : $request->query('per_page', 10);
         $search = $request->query('search');
@@ -32,8 +33,11 @@ class ProduitController extends Controller
         $user = $request->user;
         $page = $request->query('page', 1);
 
+        // return response()->json(['message' => $request->all()]   );
         $viewedProductIds = $user ? ProductView::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
         $favoriteProductIds = $user ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray() : [];
+        //retourner viewedProductIds
+        // return response()->json(['viewedProductIds' => $viewedProductIds, 'favoriteProductIds' => $favoriteProductIds]);
 
         $query = Produit::query()
             ->with(['commercant', 'category', 'counts'])
@@ -54,14 +58,7 @@ class ProduitController extends Controller
              0.25 * (1 / (DATEDIFF(NOW(), produits.created_at) / 365 + 1))' .
                     (!empty($viewedProductIds) ? ' - 0.7 * (CASE WHEN produits.id IN (' . implode(',', array_fill(0, count($viewedProductIds), '?')) . ') THEN 1 ELSE 0 END)' : '') . ') as score',
                 $viewedProductIds
-            )
-            ->when($user, function ($query) use ($user, $ville) {
-                if ($user->is_commercant ?? false) {
-                    $query->where(function ($q) use ($user, $ville) {
-                        $q->where('commercant_id', $user->id)->orWhere('ville', $ville);
-                    });
-                }
-            });
+            );
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -80,7 +77,7 @@ class ProduitController extends Controller
         } elseif ($sort === 'favorites') {
             $query->orderBy('favorites_count', 'desc')->orderBy('score', 'desc');
         } else {
-            $query->orderBy('score', 'desc')->orderBy('id');
+            $query->orderBy('score', 'desc')->orderBy('favorites_count', 'desc');
         }
 
         if ($perPage === null) {
@@ -115,47 +112,8 @@ class ProduitController extends Controller
 
         return response()->json($produits);
     }
-    public function recordView(Request $request)
-    {
-        $validated = $request->validate([
-            'product_id' => 'required|uuid|exists:produits,id',
-            'user_id' => 'required|exists:users,id',
-        ]);
-
-        $produitId = $validated['product_id'];
-        $userId = $validated['user_id'];
-        $redisKey = "view:user:{$userId}:product:{$produitId}";
-
-        if (Redis::get($redisKey) === null) {
-            // Première vue pour cet utilisateur et ce produit
-            $productViewKey = "produit:views:{$produitId}";
-            Redis::incr($productViewKey); // Incrémente le compteur temporaire dans Redis
-            Redis::set($redisKey, 1); // Marque comme vu
-            Redis::expire($redisKey, 86400); // Expire après 24h
-
-            // Synchronisation immédiate avec product_counts
-            $this->syncViewsToDatabase($produitId);
-        }
-
-        return response()->json(['message' => 'Vue enregistrée']);
-    }
-
-    protected function syncViewsToDatabase($productId)
-    {
-        $viewCount = Redis::get("produit:views:{$productId}");
-        if ($viewCount && $viewCount > 0) {
-            // Mettre à jour ou créer l'entrée dans product_counts
-            $produit = Produit::find($productId);
-            $produit->counts()->updateOrCreate(
-                ['produit_id' => $productId],
-                ['views_count' => $viewCount]
-            );
-            // Réinitialiser le compteur Redis après synchronisation
-            Redis::del("produit:views:{$productId}");
-        }
-
-    }
     
+   
     public function show($id, Request $request)
     {
         $user = $request->user;
@@ -187,7 +145,42 @@ class ProduitController extends Controller
 
         return response()->json(['produit' => $produit]);
     }
+    
+    public function recordView(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|uuid|exists:produits,id',
+            'user_id' => 'required|exists:users,id',
+        ]);
 
+        $produitId = $validated['product_id'];
+        $userId = $validated['user_id'];
+        $produit = Produit::findOrFail($produitId);
+
+        // Vérifier si l'utilisateur a déjà vu ce produit
+        $existingView = ProductView::where('produit_id', $produitId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$existingView) {
+            // Nouvelle vue, incrémenter views_count et enregistrer dans product_views
+            $produit->counts()->updateOrCreate(
+                ['produit_id' => $produitId],
+                ['views_count' => \DB::raw('views_count + 1')]
+            );
+
+            ProductView::create([
+                'produit_id' => $produitId,
+                'user_id' => $userId,
+            ]);
+
+            return response()->json(['message' => 'Vue enregistrée']);
+        } else {
+            // Vue déjà enregistrée
+            return response()->json(['message' => 'Vue déjà enregistrée'], 200);
+        }
+    }
+    
 
     public function toggleFavorite($id, Request $request)
     {
@@ -277,35 +270,6 @@ class ProduitController extends Controller
             : false;
 
         return response()->json(['message' => 'Produit créé', 'produit' => $produit], 201);
-    }
-
-    public function related($id, Request $request)
-    {
-        $produit = Produit::findOrFail($id);
-        $limit = $request->query('limit', 4);
-        $categoryId = $request->query('category_id');
-        $user = $request->user;
-
-        $produits = Produit::query()
-            ->where('id', '!=', $id)
-            ->where('category_id', $categoryId)
-            ->with(['commercant', 'category'])
-            ->withCount('favorites')
-            ->inRandomOrder()
-            ->take($limit)
-            ->get();
-
-        // Charger les IDs des produits favoris par l'utilisateur
-        $favoritedProductIds = $user
-            ? ProductFavorite::where('user_id', $user->id)->pluck('produit_id')->toArray()
-            : [];
-
-        // Ajouter is_favorited_by à chaque produit
-        $produits->each(function ($produit) use ($favoritedProductIds) {
-            $produit->is_favorited_by = in_array($produit->id, $favoritedProductIds);
-        });
-
-        return response()->json(['produits' => $produits]);
     }
 
     public function boost(Request $request, $id)

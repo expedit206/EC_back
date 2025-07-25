@@ -28,6 +28,7 @@ Route::post('login', [UserController::class, 'login']);
 
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
     // Routes protégées
     // Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('auth.token')->group(function () {
