@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Produit;
 use App\Models\Commercant;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\ProductFavorite;
+use App\Models\ParrainageNiveau;
 use App\Http\Controllers\Controller;
 
 class CommercantController extends Controller
@@ -130,5 +132,74 @@ class CommercantController extends Controller
         ]);
 
         return response()->json(['message' => 'Produit modifié', 'produit' => $produit]);
+    }
+
+    public function createCommercant(Request $request)
+    {
+        $user = $request->user;
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'ville' => 'required|string|max:255',
+        ]);
+
+        // Créer le compte commerçant (actif par défaut)
+        $commercant = Commercant::create([
+            'user_id' => $user->id,
+            'nom' => $validated['nom'],
+            'ville' => $validated['ville'],
+            'active_products' => 0,
+        ]);
+
+        // Mettre à jour le parrainage si l'utilisateur a un parrain
+        if ($user->parrain_id) {
+            $this->updateParrainage($user->parrain_id);
+        }
+
+        return response()->json(['message' => 'Compte commerçant créé avec succès', 'commercant' => $commercant], 201);
+    }
+
+    private function updateParrainage($parrain_id)
+    {
+        $parrain = User::with('niveaux_users')->find($parrain_id);
+        if (!$parrain) {
+            return;
+        }
+
+        // Compter uniquement les filleuls commerçants
+        $filleuls_commercants = User::where('parrain_id', $parrain_id)
+            ->whereHas('commercant')
+            ->count();
+
+        // Récupérer ou créer l'entrée dans niveaux_users
+        $niveau_actuel = $parrain->niveaux_users()->where('statut', 'actif')->latest('date_atteinte')->first();
+        $niveau_id = $this->determinerNiveau($filleuls_commercants);
+
+        if (!$niveau_actuel || $niveau_actuel->niveau_id != $niveau_id) {
+            $niveau = ParrainageNiveau::find($niveau_id);
+            $niveau_user = $parrain->niveaux_users()->create([
+                'niveau_id' => $niveau_id,
+                'date_atteinte' => now(),
+                'jetons_attribues' => $niveau->jetons_bonus,
+                'nombre_filleuls_actuels' => $filleuls_commercants,
+            ]);
+
+            // Mettre à jour les jetons totaux
+            $parrain->increment('jetons', $niveau->jetons_bonus);
+            $parrain->save();
+        } else {
+            $niveau_actuel->update(['nombre_filleuls_actuels' => $filleuls_commercants]);
+        }
+    }
+
+    private function determinerNiveau($filleuls_commercants)
+    {
+        $niveaux = ParrainageNiveau::orderBy('filleuls_requis', 'desc')->get();
+        foreach ($niveaux as $niveau) {
+            if ($filleuls_commercants >= $niveau->filleuls_requis) {
+                return $niveau->id;
+            }
+        }
+        return 1; // Niveau par défaut (Initié)
     }
 }

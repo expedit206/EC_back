@@ -19,11 +19,11 @@ class CollaborationController extends Controller
     }
     public function store(Request $request)
     {
-       $data =  $request->validate([
+        $data =  $request->validate([
             'produit_id' => 'required|uuid|exists:produits,id',
             'prix_revente' => 'required|numeric|min:0',
         ]);
-$user = $request->user;
+        $user = $request->user;
         // $produit = Produit::findOrFail($request->produit_id);
         $produit = Produit::findOrFail($data['produit_id']);
         if ($user->commercant && $user->commercant->id === $produit->commercant_id) {
@@ -57,7 +57,7 @@ $user = $request->user;
         $produit = $collaboration->produit;
         $boutique = $produit->boutique;
 
-        if ($boutique->commercant->user_id !== auth()->user()->id) {
+        if ($boutique->commercant->user_id !== auth()->user->id) {
             return response()->json(['message' => 'Accès non autorisé'], 403);
         }
 

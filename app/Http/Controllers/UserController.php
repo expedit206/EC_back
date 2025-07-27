@@ -10,12 +10,13 @@ use App\Models\Collaboration;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
     public function register(Request $request)
-    {   
+    {
         // return response()->json(['request' => $request->all()]);
         $request->validate([
             'nom' => 'required|string|max:255',
@@ -117,6 +118,29 @@ class UserController extends Controller
         );
     }
 
+    public function updateProfilePhoto(Request $request)
+    {
+        $user = $request->user;
+
+        $request->validate([
+            'photo' => 'required|image|max:2048', // Limite à 2 Mo et accepte uniquement les images
+        ]);
+
+        // Supprimer l'ancienne photo si elle existe
+        if ($user->photo) {
+            Storage::disk('public')->delete($user->photo);
+        }
+
+        // Stocker la nouvelle photo
+        $photoPath = $request->file('photo')->store('profile_photos', 'public');
+        $user->update(['photo' => $photoPath]);
+
+        return response()->json([
+            'message' => 'Photo de profil mise à jour avec succès.',
+            'photo' => $photoPath,
+        ], 200);
+    }
+
     public function logout()
     {
         return response()->json(['message' => 'Déconnexion réussie'], 200);
@@ -135,17 +159,18 @@ class UserController extends Controller
 
         return response()->json(['user' => $user]);
     }
+    //update profile photo
 
     public function badges(Request $request)
     {
-        $user =$request->user;
-        
+        $user = $request->user;
+
         $collaborations_pending = Collaboration::where('user_id', $user->id)
             ->where('statut', 'en_attente')
             ->get();
 
-            
-      
+
+
 
         return response()->json([
             'collaborations_pending' => $collaborations_pending,

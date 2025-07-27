@@ -17,7 +17,7 @@ class AbonnementController extends Controller
             'plan' => 'required|string|in:premium_pro,premium_max',
         ]);
 
-        $user = auth()->user();
+        $user = auth()->user;
         $duree = $request->plan === 'premium_pro' ? 30 : 365; // 30 jours pour Pro, 1 an pour Max
 
         $abonnement = new Abonnement([

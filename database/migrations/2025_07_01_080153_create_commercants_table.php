@@ -18,7 +18,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->string('ville');
-            $table->boolean('actif')->default(true);
             $table->timestamps();
         });
     }

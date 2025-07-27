@@ -29,6 +29,7 @@ class User extends Authenticatable
         'token',
         'parrainage_code',
         'jetons',
+        'photo',
     ];
 
     protected $hidden = [
@@ -76,6 +77,12 @@ class User extends Authenticatable
     public function boosts()
     {
         return $this->hasMany(Boost::class);
+    }
+
+    //niveau user
+    public function niveaux_users()
+    {
+        return $this->hasMany(NiveauUser::class);
     }
 
 }

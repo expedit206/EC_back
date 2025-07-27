@@ -24,7 +24,6 @@ class CommercantFactory extends Factory
             'nom' => $this->faker->company(),
             'ville' => $this->faker->randomElement(['Douala', 'Yaoundé', 'Bamenda', 'Buea', 'Garoua']),
             'description' => $this->faker->optional()->sentence(),
-            'actif' => $this->faker->boolean(80), // 80% de chance d'être actif
             // 'revenus' => $this->faker->randomFloat(2, 0, 1000000), // Revenus entre 0 et 1M FCFA
             // 'produits_vendus' => $this->faker->numberBetween(0, 100),
         ];

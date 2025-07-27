@@ -34,7 +34,9 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::middleware('auth.token')->group(function () {
         Route::get('produits', [ProduitController::class, 'index']);
         Route::get('user', [UserController::class, 'profile']);
-        Route::post('logout', [UserController::class, 'logout']);
+
+    Route::post('/profile/photo', [UserController::class, 'updateProfilePhoto']); // Nouvelle route
+    Route::post('logout', [UserController::class, 'logout']);
         
         
         Route::post('produits', [ProduitController::class, 'store']);
@@ -46,6 +48,8 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
         
         // Route::post('abonnements', [AbonnementController::class, 'store']);
         Route::post('parrainages', [ParrainageController::class, 'store']);
+        
+        Route::post('/commercants', [CommercantController::class, 'createCommercant'])->name('commercant.store');
 
     Route::get('/commercant/produits', [CommercantController::class, 'produits'])->name('commercant.produits');
     Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store');

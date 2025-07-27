@@ -14,7 +14,16 @@ class Commercant extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id', 'user_id', 'nom', 'description', 'logo', 'ville', 'actif'];
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) \Str::uuid();
+            }
+        });
+    }
+
+    protected $fillable = ['id', 'user_id', 'nom', 'description', 'logo', 'ville'];
 
     public function user()
     {
