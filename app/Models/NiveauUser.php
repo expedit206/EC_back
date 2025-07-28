@@ -9,7 +9,7 @@ class NiveauUser extends Model
  
 
     protected $table = 'niveaux_users';
-    protected $fillable = ['user_id', 'niveau_id', 'points'];
+    protected $fillable = ['user_id', 'niveau_id', 'points', 'statut', 'date_atteinte', 'jetons_attribues'];
 
     public function user()
     {

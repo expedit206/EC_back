@@ -36,5 +36,14 @@ class Commercant extends Model
     {
         return $this->hasMany(Produit::class);
     }
-    
+
+    public function ratings()
+    {
+        return $this->hasMany(CommercantRating::class);
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return $this->ratings()->avg('rapiating') ?? 0;
+    }
 }

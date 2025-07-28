@@ -42,15 +42,15 @@ class UserController extends Controller
         ]);
 
 
-        if ($request->parrain_id) {
-            Parrainage::create([
-                // 'id' => Str::uuid(),
-                'parrain_id' => $request->parrain_id,
-                'filleul_id' => $user->id,
-                'niveau' => 1,
-                'recompense' => 500,
-            ]);
-        }
+        // if ($request->parrain_id) {
+        //     Parrainage::create([
+        //         // 'id' => Str::uuid(),
+        //         'parrain_id' => $request->parrain_id,
+        //         'filleul_id' => $user->id,
+        //         'niveau' => 1,
+        //         'recompense' => 500,
+        //     ]);
+        // }
 
         return response()->json([
             'message' => 'Inscription réussie',
@@ -118,28 +118,7 @@ class UserController extends Controller
         );
     }
 
-    public function updateProfilePhoto(Request $request)
-    {
-        $user = $request->user;
-
-        $request->validate([
-            'photo' => 'required|image|max:2048', // Limite à 2 Mo et accepte uniquement les images
-        ]);
-
-        // Supprimer l'ancienne photo si elle existe
-        if ($user->photo) {
-            Storage::disk('public')->delete($user->photo);
-        }
-
-        // Stocker la nouvelle photo
-        $photoPath = $request->file('photo')->store('profile_photos', 'public');
-        $user->update(['photo' => $photoPath]);
-
-        return response()->json([
-            'message' => 'Photo de profil mise à jour avec succès.',
-            'photo' => $photoPath,
-        ], 200);
-    }
+  
 
     public function logout()
     {

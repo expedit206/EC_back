@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Abonnement;
 use App\Models\Commercant;
+use App\Models\NiveauUser;
 use App\Models\Parrainage;
 use App\Models\Collaboration;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

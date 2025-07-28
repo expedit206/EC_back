@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AbonnementController;
@@ -49,7 +50,7 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
         // Route::post('abonnements', [AbonnementController::class, 'store']);
         Route::post('parrainages', [ParrainageController::class, 'store']);
         
-        Route::post('/commercants', [CommercantController::class, 'createCommercant'])->name('commercant.store');
+        Route::post('/commercants', [CommercantController::class, 'create'])->name('commercant.store');
 
     Route::get('/commercant/produits', [CommercantController::class, 'produits'])->name('commercant.produits');
     Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store');
@@ -58,25 +59,31 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
     Route::put('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
     Route::get('/commercant/{commercant}', [CommercantController::class, 'show'])->name('commercant.show');
-
+    Route::post('/commercant/{commercantId}/rate', [CommercantController::class, 'rate']);
+    
     Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
 
 
     
     Route::get('/user/badges', [UserController::class, 'badges'])->name('user.badges');
+    Route::get('/user/parrainage', [UserController::class, 'getParrainage']);
 
 
     Route::post('/produits/{id}/favorite', [ProduitController::class, 'toggleFavorite']);
     Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');
 
 
-    // Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
-    // Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
-    // // ... autres routes
-    //     Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
-    // Route::post('/parrainages/validate/{userId}', [ParrainageController::class, 'validateParrainage']);
-    // Route::get('/parrainages/dashboard', [ParrainageController::class, 'getParrainageDashboard']);
+    Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
+    Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
+    // ... autres routes
+        Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
+    Route::post('/parrainages/validate/{userId}', [ParrainageController::class, 'validateParrainage']);
+    Route::get('/parrainages/dashboard', [ParrainageController::class, 'dashboard']);
+    Route::get('/parrainages/niveaux', [ParrainageController::class, 'getAllNiveaux']);
 
     Route::post('/produits/{id}/boost', [ProduitController::class, 'boost']);
     Route::post('/record_view', [ProduitController::class, 'recordView']);
+
+
+    Route::get('/stats', [StatsController::class, 'index']);
 });
