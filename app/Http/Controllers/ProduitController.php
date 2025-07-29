@@ -117,7 +117,7 @@ class ProduitController extends Controller
     public function show($id, Request $request)
     {
         $user = $request->user;
-        $produit = Produit::with(['commercant', 'category'])
+        $produit = Produit::with(['commercant.user', 'category'])
             ->withCount('favorites')
             ->findOrFail($id);
 

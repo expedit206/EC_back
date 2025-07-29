@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ProduitController;
@@ -86,4 +87,8 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
 
 
     Route::get('/stats', [StatsController::class, 'index']);
+
+    Route::get('/chat/{receiverId}', [ChatController::class, 'index']);
+    Route::post('/chat/{receiverId}', [ChatController::class, 'store']);
+    Route::get('/conversations', [ChatController::class, 'conversations']);
 });

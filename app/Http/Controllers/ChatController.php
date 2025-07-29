@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\Message;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+
+class ChatController extends Controller
+{
+    /**
+     * Récupérer la liste des conversations de l'utilisateur connecté
+     */
+    public function conversations(Request $request)
+    {
+        // return response()->json(['conversations' => '$conversations']);
+
+        $user = $request->user;
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $conversations = Message::where('sender_id', $user->id)
+            ->orWhere('receiver_id', $user->id)
+            ->select('sender_id', 'receiver_id')
+            ->groupBy('sender_id', 'receiver_id')
+            ->get()
+            ->map(function ($message) use ($user) {
+                $otherUserId = $message->sender_id === $user->id ? $message->receiver_id : $message->sender_id;
+                $otherUser = User::find($otherUserId);
+                return [
+                    'user_id' => $otherUserId,
+                    'name' => $otherUser ? $otherUser->nom : 'Inconnu',
+                    'last_message' => $message->content,
+                    'updated_at' => $message->updated_at,
+                ];
+            });
+
+        return response()->json(['conversations' => $conversations]);
+    }
+
+    /**
+     * Récupérer les messages d'une conversation spécifique
+     */
+    public function index($receiverId, Request $request)
+    {
+        $user = $request->user;
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $offset = $request->query('offset', 0); // Par défaut, commence à 0
+        $limit = 30; // Limite de 30 messages par requête
+
+        $messages = Message::where(function ($query) use ($user, $receiverId) {
+            $query->where('sender_id', $user->id)->where('receiver_id', $receiverId);
+        })->orWhere(function ($query) use ($user, $receiverId) {
+            $query->where('sender_id', $receiverId)->where('receiver_id', $user->id);
+        })
+            ->with('sender', 'receiver')
+            ->orderBy('created_at', 'desc') // Tri décroissant pour les derniers messages en premier
+            ->offset($offset)
+            ->limit($limit)
+            ->get();
+            // ->reverse(); // Inverse pour avoir les plus anciens en haut
+
+        return response()->json(['messages' => $messages, 'hasMore' => $messages->count() === $limit]);
+    }
+
+    /**
+     * Envoyer un nouveau message
+     */
+    public function store(Request $request, $receiverId)
+    {
+        $user =$request->user;
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non authentifié'], 401);
+        }
+        
+        $validated = $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
+
+        // return response()->json(['message' => [
+        //     'sender_id' => $user->id,
+        //     'receiver_id' => $receiverId,
+        //     'content' => $validated['content'],
+        // ]], 401);
+        $message= DB::table('messages')->insert([
+            'sender_id' => $user->id,
+            'receiver_id' => 1,
+            'content' => $validated['content'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        // $message = Message::create([
+        //     'sender_id' => $user->id,
+        //     'receiver_id' => $receiverId,
+        //     'content' => $validated['content'],
+        // ]);
+
+        return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
+    }
+}
