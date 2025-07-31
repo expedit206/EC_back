@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Message;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -63,7 +64,7 @@ class ChatController extends Controller
             $query->where('sender_id', $receiverId)->where('receiver_id', $user->id);
         })
             ->with('sender', 'receiver')
-            ->orderBy('created_at', 'desc') // Tri décroissant pour les derniers messages en premier
+            ->orderBy('id', 'asc') // Tri décroissant pour les derniers messages en premier
             ->offset($offset)
             ->limit($limit)
             ->get();
@@ -92,19 +93,21 @@ class ChatController extends Controller
         //     'receiver_id' => $receiverId,
         //     'content' => $validated['content'],
         // ]], 401);
-        $message= DB::table('messages')->insert([
-            'sender_id' => $user->id,
-            'receiver_id' => 1,
-            'content' => $validated['content'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        // $message = Message::create([
+        // $message= DB::table('messages')->insert([
         //     'sender_id' => $user->id,
         //     'receiver_id' => $receiverId,
         //     'content' => $validated['content'],
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
         // ]);
+        $message = new Message();
+        $message->sender_id = $user->id;
+        $message->receiver_id = $receiverId;
+        $message->content = $validated['content'];
+        $message->save();
+ 
 
+        broadcast(new MessageSent($message))->toOthers();
         return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
     }
 }

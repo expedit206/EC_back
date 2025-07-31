@@ -47,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withProviders([
         \App\Providers\AppServiceProvider::class, // Assurez-vous que ce provider est listé
+        
     ])
     ->withSchedule(function ($schedule): void {
         // $schedule->command('product:counts')->hourly(); // Exécute la commande toutes les heures

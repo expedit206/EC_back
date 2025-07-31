@@ -12,6 +12,7 @@ class Message extends Model
     // protected $fillable = ['sender_id', 'receiver_id', 'product_id', 'content'];
     // table
     protected $table = 'messages';
+    
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');

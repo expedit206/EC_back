@@ -5,7 +5,6 @@ namespace App\Events;
 use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -24,11 +23,11 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new PrivateChannel('chat.' . $this->message->product_id . '.' . $this->message->receiver_id);
+        return new PrivateChannel('chat.' . $this->message->receiver_id);
     }
 
     public function broadcastWith()
     {
-        return ['message' => $this->message];
+        return ['message' => $this->message->load('sender   ')];
     }
 }
