@@ -39,9 +39,11 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
 
     Route::post('/profile/photo', [UserController::class, 'updateProfilePhoto']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);
-        
-        
-        Route::post('produits', [ProduitController::class, 'store']);
+
+    // Dans routes/web.php
+    // dd(config('broadcasting.default'));
+
+    Route::post('produits', [ProduitController::class, 'store']);
 
 
         Route::post('collaborations', [CollaborationController::class, 'store']);

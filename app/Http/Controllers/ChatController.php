@@ -105,9 +105,12 @@ class ChatController extends Controller
         $message->receiver_id = $receiverId;
         $message->content = $validated['content'];
         $message->save();
- 
 
-        broadcast(new MessageSent($message))->toOthers();
+        // event(new MessageSent($message));git add .
+
+        broadcast(new MessageSent($message));
+        // return response()->json(['message' => event(new MessageSent($message))]);
+        
         return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
     }
 }
