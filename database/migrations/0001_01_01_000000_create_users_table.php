@@ -18,14 +18,15 @@
                 $table->string('mot_de_passe');
                 $table->string('photo')->nullable();
                 $table->boolean('premium')->default(false);
-
+                $table->timestamp('subscription_ends_at')->nullable();
                 // Corrigé ici :
                 $table->foreignId('parrain_id')
                     ->nullable()
                     ->constrained('users')
                     ->nullOnDelete();
 
-                $table->string('abonnement_type')->default('gratuit'); // Valeurs possibles : gratuit, premium, <pro></pro>
+                $table->boolean('is_premium')->default(0);
+                
                 $table->unsignedInteger('jetons')->default(0); // Solde en Jetons
                 $table->decimal('solde', 10, 2)->default(0);
                 $table->string('token')->nullable()->unique();

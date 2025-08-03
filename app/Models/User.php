@@ -31,6 +31,8 @@ class User extends Authenticatable
         'parrainage_code',
         'jetons',
         'photo',
+        'is_premium',
+        'subscription_ends_at'
     ];
 
     protected $hidden = [

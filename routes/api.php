@@ -6,10 +6,12 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ProduitController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\CommercantController;
 use App\Http\Controllers\ParrainageController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\CollaborationController;
 
 Route::get('/redis-test', function () {
@@ -37,13 +39,13 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
         Route::get('produits', [ProduitController::class, 'index']);
         Route::get('user', [UserController::class, 'profile']);
 
-    Route::post('/profile/photo', [UserController::class, 'updateProfilePhoto']); // Nouvelle route
+    Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);
 
     // Dans routes/web.php
     // dd(config('broadcasting.default'));
 
-    Route::post('produits', [ProduitController::class, 'store']);
+    // Route::post('produits', [ProduitController::class, 'store'])->middleware('premium:product');
 
 
         Route::post('collaborations', [CollaborationController::class, 'store']);
@@ -56,7 +58,7 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
         Route::post('/commercants', [CommercantController::class, 'create'])->name('commercant.store');
 
     Route::get('/commercant/produits', [CommercantController::class, 'produits'])->name('commercant.produits');
-    Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store');
+    Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store')->middleware('premium:product');
     Route::delete('/commercant/produits/{produit}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
@@ -93,4 +95,11 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::get('/chat/{receiverId}', [ChatController::class, 'index']);
     Route::post('/chat/{receiverId}', [ChatController::class, 'store']);
     Route::get('/conversations', [ChatController::class, 'conversations']);
+    
+    
+    Route::get('/conversations', [ChatController::class, 'conversations']);
+
+
+Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPremium']);
+
 });

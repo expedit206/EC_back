@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'auth.token' => AuthToken::class,
         'broadcast.token' => \App\Http\Middleware\BroadcastTokenAuth::class,
+        'premium' => \App\Http\Middleware\CheckPremiumLimits::class,
 
     ]);
     // Middleware pour les requêtes API "stateful" (SPA)
