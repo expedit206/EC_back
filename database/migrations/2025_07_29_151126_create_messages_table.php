@@ -13,9 +13,15 @@ return new class extends Migration
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
+            // $table->foreignUuid('product_id')->references('id')->on('produits')->onDelete('set null');
             $table->foreignId('sender_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreignId('receiver_id')->references('id')->on('users')->onDelete('cascade');
+            // $table->foreignUuid('product_id')->references('id')->on('produits')->onDelete('cascade')->nullable();
             $table->text('content');
+
+            $table->uuid('product_id')->nullable()->default(null);
+            $table->foreign('product_id')->references('id')->on('produits')->onDelete('set null');
+
             $table->timestamps();
 
             $table->index(['sender_id', 'receiver_id']);

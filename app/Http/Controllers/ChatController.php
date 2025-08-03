@@ -63,7 +63,7 @@ class ChatController extends Controller
         })->orWhere(function ($query) use ($user, $receiverId) {
             $query->where('sender_id', $receiverId)->where('receiver_id', $user->id);
         })
-            ->with('sender', 'receiver')
+            ->with('sender', 'receiver', 'product')
             ->orderBy('id', 'asc') // Tri décroissant pour les derniers messages en premier
             ->offset($offset)
             ->limit($limit)
@@ -86,6 +86,7 @@ class ChatController extends Controller
         
         $validated = $request->validate([
             'content' => 'required|string|max:1000',
+            'product_id' => 'nullable|exists:produits,id',
         ]);
 
         // return response()->json(['message' => [
@@ -104,11 +105,12 @@ class ChatController extends Controller
         $message->sender_id = $user->id;
         $message->receiver_id = $receiverId;
         $message->content = $validated['content'];
+        $message->product_id = $validated['product_id']??null;
         $message->save();
 
         // event(new MessageSent($message));git add .
 
-        broadcast(new MessageSent($message));
+        // broadcamessagest(new MessageSent($message));
         // return response()->json(['message' => event(new MessageSent($message))]);
         
         return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
