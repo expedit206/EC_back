@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use MeSomb\MeSomb;
 use Illuminate\Http\Request;
+use MeSomb\Util\RandomGenerator;
+use App\Models\PremiumTransaction;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use MeSomb\Operation\PaymentOperation;
 
 class SubscriptionController extends Controller
 {
@@ -18,16 +23,66 @@ class SubscriptionController extends Controller
         // Valider le type d'abonnement
         $validated = $request->validate([
             'subscription_type' => 'required|in:monthly,yearly',
+            'payment_service' => 'required|in:ORANGE,MTN,AIRTEL',
+
+            'phone_number' => 'required|regex:/^6[0-9]{8}$/', // 9 chiffres commençant par 6
         ]);
 
-        $subscriptionType = $validated['subscription_type'];
-        $amount = $subscriptionType === 'monthly' ? 5000 : 50000; // En FCFA
 
-        // Simuler un paiement (à remplacer par une intégration réelle)
-        $paymentSuccess = true; // Simule un paiement réussi
-        if (!$paymentSuccess) {
-            return response()->json(['message' => 'Échec du paiement'], 400);
+        $subscriptionType = $validated['subscription_type'];
+        $paymentService = $validated['payment_service'];
+        $phoneNumber = $validated['phone_number'];
+        $amount = $subscriptionType === 'monthly' ? 100 : 50000;
+        $typeAbonnement = $subscriptionType === 'monthly' ? 'mensuel' : 'annuel';
+        //mesomb pour paiement
+
+        $mesomb = new PaymentOperation(
+    env('MESOMB_APPLICATION_KEY'),
+    env('MESOMB_ACCESS_KEY'),
+    env('MESOMB_SECRET_KEY'),
+);
+
+        $nonce = RandomGenerator::nonce();
+
+
+        // Appel à makeCollect avec le numéro dynamique
+        $response = $mesomb->makeCollect([
+            'amount' => $amount , // Convertir en centimes
+            'service' => $paymentService,
+            'payer' => $phoneNumber, // Utiliser le numéro fourni
+            'nonce' => $nonce,
+        ]);
+
+        if ($response->isOperationSuccess()) {
+
+            PremiumTransaction::create([
+                'id' => \Str::uuid(),
+                'user_id' => $user->id,
+                'type_abonnement' => $typeAbonnement,
+                'montant' => $amount,
+                'methode_paiement' => $paymentService,
+                'transaction_id_mesomb' => $nonce,
+                'statut' => 'réussi',
+                'date_transaction' => now(),
+            ]);
+            // return response()->json(['message' => 'reussi du paiement'], 200);
+        } else {
+
+            PremiumTransaction::create([
+                'id' => \Str::uuid(),
+                'user_id' => $user->id,
+                'type_abonnement' => $typeAbonnement,
+                'montant' => $amount,
+                'methode_paiement' => $paymentService,
+                'transaction_id_mesomb' => $nonce,
+                'statut' => 'echec',
+                'date_transaction' => now(),
+            ]);
+            return response()->json(['message' => $response], 400);
+            echo "Échec du paiement : " . $response;
         }
+
+     
 
         // Mettre à jour is_premium à 1
         $user->update(['is_premium' => 1]);
