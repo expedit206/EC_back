@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use MeSomb\MeSomb;
 use Illuminate\Http\Request;
 use MeSomb\Util\RandomGenerator;
 use App\Models\PremiumTransaction;
@@ -19,14 +18,15 @@ class SubscriptionController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
-
+        
         // Valider le type d'abonnement
         $validated = $request->validate([
             'subscription_type' => 'required|in:monthly,yearly',
-            'payment_service' => 'required|in:ORANGE,MTN,AIRTEL',
+            'payment_service' => 'required|in:ORANGE,MTN',
 
             'phone_number' => 'required|regex:/^6[0-9]{8}$/', // 9 chiffres commençant par 6
         ]);
+            // return respons   e()->json(['message' => 'Utilisateur non authentifié']);
 
 
         $subscriptionType = $validated['subscription_type'];
@@ -79,7 +79,6 @@ class SubscriptionController extends Controller
                 'date_transaction' => now(),
             ]);
             return response()->json(['message' => $response], 400);
-            echo "Échec du paiement : " . $response;
         }
 
      

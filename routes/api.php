@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\JetonController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProfileController;
@@ -102,4 +103,8 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
 
 Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPremium']);
 
+
+    Route::post('/acheter-jetons', [JetonController::class, 'acheterJetons']);
+
+    Route::get('/jeton-transactions/{userId}', [JetonController::class, 'getUserTransactions']);
 });

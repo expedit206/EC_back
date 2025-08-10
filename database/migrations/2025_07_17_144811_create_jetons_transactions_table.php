@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jetons_transactions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('type');
-            $table->integer('montant');
-            $table->string('description');
+         $table->id();
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->integer('nombre_jetons')->unsigned(); // Nombre de jetons achetés
+            $table->decimal('montant', 10, 2); // Montant total payé
+            $table->string('methode_paiement');
+            $table->string('transaction_id_mesomb')->nullable();
+            $table->string('statut');
+            $table->timestamp('date_transaction');
             $table->timestamps();
         });
     }

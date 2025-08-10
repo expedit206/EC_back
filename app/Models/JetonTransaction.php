@@ -2,20 +2,26 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
-class JetonsTransaction extends Model
+class JetonTransaction extends Model
 {
     /**
      * Les attributs qui sont assignables en masse.
      *
      * @var array
      */
+    protected $table = 'jetons_transactions';
     protected $fillable = [
+        'id',
         'user_id',
-        'type',
+        'nombre_jetons',
         'montant',
-        'description',
+        'methode_paiement',
+        'transaction_id_mesomb',
+        'statut',
+        'date_transaction',
     ];
 
     /**
