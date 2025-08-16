@@ -32,6 +32,9 @@ Route::post('login', [UserController::class, 'login']);
     Route::post('login', [UserController::class, 'login']);
 
 
+Route::get('/', function () {
+    return view('welcome'); // Laravel va chercher resources/views/welcome.blade.php
+});
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
     // Routes protégées
