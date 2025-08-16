@@ -63,7 +63,7 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::delete('/commercant/produits/{produit}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
     Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
-    Route::put('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
+    Route::post('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
     Route::get('/commercant/{commercant}', [CommercantController::class, 'show'])->name('commercant.show');
     Route::post('/commercant/{commercantId}/rate', [CommercantController::class, 'rate']);
     
@@ -79,7 +79,7 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::get('/produits/{produit}', [ProduitController::class, 'show'])->name('produits.show');
 
 
-    Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCodeSuggestion']);
+    Route::post('/parrainages/generateCode', [ParrainageController::class, 'generateCode']);
     Route::post('/parrainages/createCode', [ParrainageController::class, 'createCode']);
     // ... autres routes
         Route::post('/parrainages/register', [ParrainageController::class, 'registerParrainage']);
@@ -96,7 +96,7 @@ Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedPr
     Route::get('/chat/{receiverId}', [ChatController::class, 'index']);
     Route::post('/chat/{receiverId}', [ChatController::class, 'store']);
     Route::get('/conversations', [ChatController::class, 'conversations']);
-    
+    Route::put('/messages/mark-all-as-read', [ChatController::class, 'markAllAsRead']);
     
     Route::get('/conversations', [ChatController::class, 'conversations']);
 

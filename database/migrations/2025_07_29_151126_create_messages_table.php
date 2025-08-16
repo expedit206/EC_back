@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('receiver_id')->references('id')->on('users')->onDelete('cascade');
             // $table->foreignUuid('product_id')->references('id')->on('produits')->onDelete('cascade')->nullable();
             $table->text('content');
+            $table->boolean('is_read')->default(false);
 
             $table->uuid('product_id')->nullable()->default(null);
             $table->foreign('product_id')->references('id')->on('produits')->onDelete('set null');

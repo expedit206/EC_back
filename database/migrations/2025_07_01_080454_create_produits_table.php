@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('quantite');
             $table->foreignUuid('category_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->string('ville')->nullable();
-            $table->string('photo_url')->nullable();
+            $table->json('photos')->nullable(); // Remplace photo_url par photos (JSON)
             $table->boolean('collaboratif')->default(false);
             $table->decimal('marge_min', 10, 2)->nullable();
             $table->timestamps();

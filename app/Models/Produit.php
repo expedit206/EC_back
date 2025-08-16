@@ -21,6 +21,9 @@ class Produit extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    protected $casts = [
+        'photos' => 'array', // Cast la colonne JSON en tableau PHP
+    ];
     protected $fillable = [
         'id',
         'commercant_id',
@@ -30,7 +33,7 @@ class Produit extends Model
         'description',
         'prix',
         'quantite',
-        'photo_url',
+        'photos',
         'collaboratif',
         'marge_min'
     ];

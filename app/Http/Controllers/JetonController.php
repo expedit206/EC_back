@@ -63,6 +63,7 @@ class JetonController extends Controller
                 'nombre_jetons' => $nombreJetons,
                 'montant' => $montant,
                 'methode_paiement' => $paymentService,
+                'phone_number' => $phoneNumber,
                 'transaction_id_mesomb' => $nonce,
                 'statut' => 'réussi',
                 'date_transaction' => now(),

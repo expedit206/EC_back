@@ -8,7 +8,7 @@ class ParrainageNiveau extends Model
 {
     
     protected $table = 'niveaux_parrainages';
-    protected $fillable = ['id', 'niveau', 'points_requis', 'jetons_attribues', 'description'];
+    protected $fillable = ['id', 'niveau', 'points_requis', 'jetons_attribues', 'description', 'couleur'];
 
     public function niveaux_users()
     {

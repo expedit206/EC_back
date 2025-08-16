@@ -35,7 +35,7 @@ class ParrainageController extends Controller
         
         // Récupérer les niveaux et déterminer le niveau actuel
         $niveaux = ParrainageNiveau::orderBy('filleuls_requis')->get();
-        $niveauActuel = $niveaux->firstWhere('filleuls_requis', '<=', $totalParrainages) ?? $niveaux->first();
+        $niveauActuel = $niveaux->Where('filleuls_requis', '<=', $totalParrainages)->last() ?? $niveaux->first();
         $niveauSuivant = $niveaux->firstWhere('filleuls_requis', '>', $totalParrainages) ?? $niveaux->last();
 
         // $progression = $niveauSuivant ;
@@ -60,6 +60,7 @@ class ParrainageController extends Controller
                 'id' => $niveauActuel->id,
                 'nom' => $niveauActuel->nom,
                 'emoji' => $niveauActuel->emoji,
+                'couleur' => $niveauActuel->couleur,
                 'filleuls_requis' => $niveauActuel->filleuls_requis,
                 'jetons_bonus' => $niveauActuel->jetons_bonus,
                 'avantages' => json_decode($niveauActuel->avantages, true),
@@ -95,13 +96,13 @@ class ParrainageController extends Controller
     public function generateCode(Request $request)
     {
         $user = $request->user;
-
+        
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        $suggestedCode = Str::slug($user->nom) . '-' . Str::random(4);
-        $suggestedCode = strtoupper(substr($suggestedCode, 0, 10));
+        $suggestedCode = Str::random(3) . '' .Str::slug($user->nom);
+        $suggestedCode = strtoupper(substr($suggestedCode, 0, 6));
 
         while (User::where('parrainage_code', $suggestedCode)->exists()) {
             $suggestedCode = Str::slug($user->nom) . '-' . Str::random(4);

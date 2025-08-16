@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('nombre_jetons')->unsigned(); // Nombre de jetons achetés
             $table->decimal('montant', 10, 2); // Montant total payé
             $table->string('methode_paiement');
+            $table->string('phone_number')->nullable();
             $table->string('transaction_id_mesomb')->nullable();
             $table->string('statut');
             $table->timestamp('date_transaction');

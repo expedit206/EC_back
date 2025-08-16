@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\ProductFavorite;
 use App\Models\ParrainageNiveau;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 
 class CommercantController extends Controller
 {
@@ -33,21 +34,31 @@ class CommercantController extends Controller
     public function storeProduit(Request $request)
     {
         $user = $request->user;
+        // return response()->json(['message' => $request->all()]);
         if (!$user->commercant) {
-            return response()->json(['message' => 'Accès réservé aux commerçants'], 403);
         }
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
-            'photo_url' => 'nullable|string',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|max:2048', // Limite à 2Mo par image
             'category_id' => 'required|exists:categories,id',
-            'collaboratif' => 'boolean',
+            'collaboratif' => 'required',
             'marge_min' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            // 'ville' => 'required|string',
+            'ville' => 'nullable|string',
         ]);
-        
+
+        $photos = [];
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('produits', 'public'); // Stocke dans storage/app/public/produits
+                $photos[] = asset('storage/' . $path); // Génère l'URL publique
+            }
+        }
+// return response()->json(['message' => $photos]);
         $produit = Produit::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'commercant_id' => $user->commercant->id,
@@ -55,15 +66,77 @@ class CommercantController extends Controller
             'nom' => $validated['nom'],
             'description' => $validated['description'],
             'prix' => $validated['prix'],
-            'photo_url' => $validated['photo_url'],
-            'collaboratif' => $validated['collaboratif'] ?? false,
-            'marge_min' => $validated['marge_min'],
+            'photos' => $photos, // Stocker les URLs en JSON
+            // 'photos' => json_encode($photos), // Stocker les URLs en JSON
+            'collaboratif' => $validated['collaboratif'] =='false' ? 0 : 1,
+            'marge_min' => $validated['marge_min']??null,
             'quantite' => $validated['stock'],
-            'ville' => $validated['ville']??'aucun',
+            'ville' => $validated['ville'] ?? 'aucun',
         ]);
-        // return response()->json(['request' => $user->commercant->id]);
 
         return response()->json(['produit' => $produit], 201);
+    }
+
+    // Pour la mise à jour
+    public function updateProduit(Request $request, $id)
+    {
+        // Récupérer l'utilisateur authentifié
+        $user = $request->user;
+        $produit = Produit::where('commercant_id', $user->commercant->id)->findOrFail($id);
+
+        // Validation des données
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'collaboratif' => 'boolean',
+            'marge_min' => 'nullable|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'ville' => 'nullable|string',
+        ]);
+
+        // Gérer les anciennes photos (suppression)
+        $oldPhotos = $produit->photos ?? [];
+        if (!empty($oldPhotos) && is_array($oldPhotos)) {
+            foreach ($oldPhotos as $oldPhoto) {
+                // Extraire le chemin relatif à partir de l'URL (ex. : /storage/produits/filename.png -> produits/filename.png)
+                $path = parse_url($oldPhoto, PHP_URL_PATH);
+                $relativePath = str_replace('/storage/', '', $path); // Récupère uniquement le chemin relatif (ex. : produits/filename.png)
+                if (Storage::disk('public')->exists($relativePath)) {
+                    Storage::disk('public')->delete($relativePath);
+                }
+            }
+        }
+
+        // Gérer les nouvelles photos
+        $photos = [];
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $photoPath = $photo->store('produits', 'public');
+                $photos[] = asset('storage/' . $photoPath); // Stocker l'URL complète
+            }
+        } else {
+            // Si aucune nouvelle photo n'est uploadée, conserver les anciennes (si aucune suppression n'est demandée)
+            $photos = $oldPhotos;
+        }
+
+        // Mettre à jour le produit
+        $produit->update([
+            'nom' => $validated['nom'],
+            'description' => $validated['description'],
+            'prix' => $validated['prix'],
+            'photos' => $photos,
+            'category_id' => $validated['category_id'],
+            'collaboratif' => $validated['collaboratif'] ?? false,
+            'marge_min' => $validated['marge_min'] ?? null,
+            'quantite' => $validated['stock'],
+            'ville' => $validated['ville'] ?? 'aucun',
+        ]);
+
+        return response()->json(['produit' => $produit], 200);
     }
 
     public function destroyProduit(Produit $produit, Request $request )
@@ -139,40 +212,7 @@ class CommercantController extends Controller
         return response()->json(['commercant' => $commercant]);
     }
 
-    public function updateProduit(Request $request, $id)
-    {
-        $user = $request->user;
-        if (!$user->commercant) {
-            return response()->json(['message' => 'Accès réservé aux commerçants'], 403);
-        }
-
-        $produit = Produit::where('id', $id)->where('commercant_id', $user->commercant->id)->firstOrFail();
-
-        $data = $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'prix' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'photo_url' => 'nullable|url',
-            'category_id' => 'required|exists:categories,id',
-            'collaboratif' => 'boolean',
-            'marge_min' => 'nullable|numeric|min:0|required_if:collaboratif,true',
-        ]);
-
-        $produit->update([
-            'nom' => $data['nom'],
-            'description' => $data['description'],
-            'prix' => $data['prix'],
-            'stock' => $data['stock'],
-            'photo_url' => $data['photo_url'],
-            'category_id' => $data['category_id'],
-            'collaboratif' => $data['collaboratif'],
-            'marge_min' => $data['collaboratif'] ? $data['marge_min'] : null,
-        ]);
-
-        return response()->json(['message' => 'Produit modifié', 'produit' => $produit]);
-    }
-
+  
     public function create(Request $request)
     {
         $user = $request->user;

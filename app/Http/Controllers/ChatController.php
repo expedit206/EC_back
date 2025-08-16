@@ -115,4 +115,17 @@ class ChatController extends Controller
         
         return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
     }
+
+    
+    public function markAllAsRead(Request $request)
+    {
+       
+        $user = $request->user;
+        Message::where('receiver_id', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+            
+        $unreadMessagesCount = Message::where('receiver_id', $user->id)->where('is_read', false)->count();
+        return response()->json(['message' => 'Tous les messages marqués comme lus', 'unread_messages' => $unreadMessagesCount]);
+    }
 }

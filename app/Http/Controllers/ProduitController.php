@@ -137,6 +137,7 @@ class ProduitController extends Controller
                     'produit_id' => $id,
                     'user_id' => $user->id,
                 ]);
+                
                 Redis::incr("produit:views:{$id}");
             }
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Message;
 use App\Models\Parrainage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -110,7 +111,7 @@ class UserController extends Controller
 
         $user = $request->user;
         // $user = User::where('token', $token)->first();
-        $user->load('commercant');
+        $user->load('commercant', 'niveaux_users.parrainageNiveau');
         return response()->json(
             [
                 'user' => $user,
@@ -144,15 +145,22 @@ class UserController extends Controller
     {
         $user = $request->user;
 
-        $collaborations_pending = Collaboration::where('user_id', $user->id)
-            ->where('statut', 'en_attente')
-            ->get();
-
-
-
+        // Compter les collaborations en attente
+        $collaborationsPendingCount = Collaboration::where('user_id', $user->id)
+            ->where('statut', 'en_attente') // Standardisé sur 'statut'
+            ->count();
+        // return response()->json([
+        //     'collaborations_pending' => $collaborationsPendingCount,
+        //     // 'unread_messages' => $unreadMessagesCount,
+        // ]);
+        // Compter les messages non lus pour l'utilisateur connecté (receiver_id)
+        $unreadMessagesCount = Message::where('receiver_id', $user->id)
+            ->where('is_read', false)
+            ->count();
 
         return response()->json([
-            'collaborations_pending' => $collaborations_pending,
+            'collaborations_pending' => $collaborationsPendingCount,
+            'unread_messages' => $unreadMessagesCount,
         ]);
     }
 }
