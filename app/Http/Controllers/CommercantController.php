@@ -150,7 +150,8 @@ class CommercantController extends Controller
 
     public function profil(Request $request)
     {
-        $commercant = $request->user->load('commercant',);
+         $request->user->load('commercant',);
+        $commercant = $request->user->commercant;
         return response()->json(['commercant' => $commercant]);
     }
 
