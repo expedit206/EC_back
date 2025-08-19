@@ -167,11 +167,7 @@ class ProduitController extends Controller
             // Nouvelle vue, incrémenter views_count et enregistrer dans product_views
             $produit->counts()->updateOrCreate(
                 ['produit_id' => $produitId],
-                ['views_count' => \DB::
-                
-                
-                
-                ('views_count + 1')]
+                ['views_count' => \DB::raw('views_count + 1')]
             );
 
             ProductView::create([
