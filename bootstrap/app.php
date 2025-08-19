@@ -25,12 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+    $middleware->statefulApi();
     //
+
     $middleware->api(append: [
-        HandleCors::class, // CORS
+        // HandleCors::class, // CORS
         // \Fruitcake\Cors\HandleCors::class,
         // 'throttle:api', // Limitation des requêtes
-        SubstituteBindings::class, // Liaison des modèles
+        // SubstituteBindings::class, // Liaison des modèles
     ]);
     $middleware->web(append: [
         EncryptCookies::class,

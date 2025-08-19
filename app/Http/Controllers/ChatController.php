@@ -108,9 +108,7 @@ class ChatController extends Controller
         $message->product_id = $validated['product_id']??null;
         $message->save();
 
-        // event(new MessageSent($message));git add .
-
-        // broadcamessagest(new MessageSent($message));
+        broadcast(new MessageSent($message))->toOthers();
         // return response()->json(['message' => event(new MessageSent($message))]);
         
         return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);

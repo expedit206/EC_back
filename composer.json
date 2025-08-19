@@ -10,6 +10,7 @@
         "hachther/mesomb-php": "*",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.5",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^3.0",
         "ramsey/uuid": "^4.9",
