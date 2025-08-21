@@ -1,25 +1,24 @@
-<?php
-return [
+    <?php
+    return [
 
-    'paths' => ['api/v1/*', 'broadcasting/*'],
+        'paths' => ['api/v1/*', 'broadcasting/*', 'sanctum/csrf-cookie', 'login', 'logout'],
 
-    'allowed_methods' => ['*'],
+        'allowed_methods' => ['*'],
 
-    // Liste explicite de ton front local et backend local
-    'allowed_origins' => [
-        // 'http://localhost:4000',
+        // Liste explicite de ton front local et backend local
+        'allowed_origins' => [
+            'http://localhost:5173',
+            'http://localhost:4000',
+            'https://escameroun.devfack.com',
+        ],
 
-        'https://escameroun.devfack.com',
-        'https://escameroun.devfack.com/frontend',
-        // 'http://localhost', // Pour les tests locaux
-        'http://localhost:5173',],
 
-    'allowed_origins_patterns' => [],
+        'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+        'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
- 
-    'supports_credentials' => true, // IMPORTANT pour Sanctum
+        'exposed_headers' => [],
+    
+        'supports_credentials' => true, // IMPORTANT pour Sanctum
 
-];
+    ];

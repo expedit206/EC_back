@@ -11,14 +11,12 @@ use App\Models\Collaboration;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
     public function register(Request $request)
     {
-        // return response()->json(['request' => $request->all()]);
         $request->validate([
             'nom' => 'required|string|max:255',
             'telephone' => 'required|string|max:20|unique:users,telephone',
@@ -29,43 +27,22 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            // 'id' => Str::uuid(),
             'nom' => $request->nom,
             'telephone' => $request->telephone,
             'email' => $request->email,
             'ville' => $request->ville,
             'mot_de_passe' => Hash::make($request->mot_de_passe),
-            // 'role' => 'user',
             'premium' => false,
             'parrain_id' => $request->parrain_id,
-            'token' => Str::uuid(), // Générer un token à l'inscription
-            'token_expires_at' => Carbon::now()->addDays(7),
         ]);
 
-
-        // if ($request->parrain_id) {
-        //     Parrainage::create([
-        //         // 'id' => Str::uuid(),
-        //         'parrain_id' => $request->parrain_id,
-        //         'filleul_id' => $user->id,
-        //         'niveau' => 1,
-        //         'recompense' => 500,
-        //     ]);
-        // }
+        // Génère un vrai token Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Inscription réussie',
-            'user' => [
-                // 'id' => $user->id,
-                'nom' => $user->nom,
-                'email' => $user->email,
-                'telephone' => $user->telephone,
-                'ville' => $user->ville,
-                'role' => $user->role,
-                'premium' => $user->premium,
-                'parrain_id' => $user->parrain_id,
-            ],
-            'token' => $user->token,
+            'user' => $user,
+            'token' => $token,
         ], 201);
     }
 
@@ -75,6 +52,7 @@ class UserController extends Controller
             'login' => 'required|string',
             'mot_de_passe' => 'required|string',
         ]);
+
         $field = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'telephone';
         $user = User::where($field, $request->input('login'))->first();
 
@@ -83,77 +61,50 @@ class UserController extends Controller
                 'login' => ['Les informations d\'identification sont incorrectes.'],
             ]);
         }
-        $token = Str::uuid();
-        $user->update([
-            'token' => $token,
-            'token_expires_at' => Carbon::now()->addDays(7), // Expire dans 7 jours
-        ]);
-        $user->load('commercant');
+
+        // Supprimer les anciens tokens si tu veux session unique
+        $user->tokens()->delete();
+
+        // Créer un nouveau token Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'message' => 'Connexion réussie',
-            'user' => [
-                'id' => $user->id,
-                'nom' => $user->nom,
-                'email' => $user->email,
-                'telephone' => $user->telephone,
-                'ville' => $user->ville,
-                'role' => $user->role,
-                'premium' => $user->premium,
-            ],
+            'user' => $user,
             'token' => $token,
         ], 200);
     }
 
-    public function profile(Request $request)
+    public function logout(Request $request)
     {
+        // Supprime seulement le token utilisé
+        $request->user()->currentAccessToken()->delete();
 
-        // $token = $request->header('Authorization');
-
-        $user = $request->user;
-        // $user = User::where('token', $token)->first();
-        $user->load('commercant', 'niveaux_users.parrainageNiveau');
-        return response()->json(
-            [
-                'user' => $user,
-            ],
-        );
-    }
-
-  
-
-    public function logout()
-    {
         return response()->json(['message' => 'Déconnexion réussie'], 200);
     }
 
     public function updateNotifications(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
+
         $data = $request->validate([
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
         ]);
 
         $user->update($data);
-        $user->load('commercant');
 
         return response()->json(['user' => $user]);
     }
-    //update profile photo
 
     public function badges(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
-        // Compter les collaborations en attente
         $collaborationsPendingCount = Collaboration::where('user_id', $user->id)
-            ->where('statut', 'en_attente') // Standardisé sur 'statut'
+            ->where('statut', 'en_attente')
             ->count();
-        // return response()->json([
-        //     'collaborations_pending' => $collaborationsPendingCount,
-        //     // 'unread_messages' => $unreadMessagesCount,
-        // ]);
-        // Compter les messages non lus pour l'utilisateur connecté (receiver_id)
+
         $unreadMessagesCount = Message::where('receiver_id', $user->id)
             ->where('is_read', false)
             ->count();
@@ -161,6 +112,22 @@ class UserController extends Controller
         return response()->json([
             'collaborations_pending' => $collaborationsPendingCount,
             'unread_messages' => $unreadMessagesCount,
+        ]);
+    }
+    public function profile(Request $request)
+    {
+        $user = $request->user(); // ✅ Récupère l'utilisateur à partir du token
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non authentifié'], 401);
+        }
+
+        // Charger les relations nécessaires
+        $user->load('commercant', 'niveaux_users.parrainageNiveau');
+
+        return response()->json([
+            'user' => $request->user(),
+            'request' => $request->bearerToken(),
         ]);
     }
 }

@@ -19,16 +19,16 @@ Route::get('/redis-test', function () {
     Redis::set('test_key', 'Hello Redis!');
     return Redis::get('test_key'); // Doit retourner "Hello Redis!"
 });
-Route::post('register', [UserController::class, 'register']);
-Route::middleware('guest')->group(function () {
-Route::post('login', [UserController::class, 'login']);
-});
+// Route::post('register', [UserController::class, 'register']);
+// Route::middleware('guest')->group(function () {
+// Route::post('/login', [UserController::class, 'login']);
+// });
 // Routes protégées
     // Authentification
     // Route::post('register', [UserController::class, 'register']);
 
 
-    Route::post('register', [UserController::class, 'register']);
+    // Route::post('register', [UserController::class, 'register']);
     Route::post('login', [UserController::class, 'login']);
 
 
@@ -36,12 +36,12 @@ Route::get('/', function () {
     return view('welcome'); // Laravel va chercher resources/views/welcome.blade.php
 });
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
+// Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
     // Routes protégées
     // Route::get('produits', [ProduitController::class, 'index']);
-    Route::middleware('auth.token')->group(function () {
-        Route::get('produits', [ProduitController::class, 'index']);
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('user', [UserController::class, 'profile']);
+        Route::get('produits', [ProduitController::class, 'index']);
 
     Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);

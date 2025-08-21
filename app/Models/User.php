@@ -2,6 +2,7 @@
 // app/Models/User.php
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use App\Models\Abonnement;
 use App\Models\Commercant;
 use App\Models\NiveauUser;
@@ -10,12 +11,9 @@ use App\Models\Collaboration;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable 
+class User extends Authenticatable
 {
-    // protected $primaryKey = 'id';
-    // protected $keyType = 'string';
-    // public $incrementing = false;
-    use HasFactory;
+    use HasApiTokens, HasFactory; // <---- Ajout de HasApiTokens
 
     protected $fillable = [
         'id',
@@ -27,7 +25,6 @@ class User extends Authenticatable
         'role',
         'premium',
         'parrain_id',
-        'token',
         'parrainage_code',
         'jetons',
         'photo',
@@ -37,13 +34,14 @@ class User extends Authenticatable
 
     protected $hidden = [
         'mot_de_passe',
+        'remember_token', // utile pour masquer si tu utilises remember
     ];
 
     public function getAuthPassword()
     {
         return $this->mot_de_passe;
     }
-    
+
     public function commercant()
     {
         return $this->hasOne(Commercant::class);
@@ -53,8 +51,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Collaboration::class);
     }
-
-
 
     public function filleuls()
     {
@@ -71,7 +67,6 @@ class User extends Authenticatable
         return $this->hasMany(Abonnement::class);
     }
 
-
     public function jetonsTransactions()
     {
         return $this->hasMany(JetonsTransaction::class);
@@ -82,10 +77,8 @@ class User extends Authenticatable
         return $this->hasMany(Boost::class);
     }
 
-    //niveau user
     public function niveaux_users()
     {
         return $this->hasMany(NiveauUser::class);
     }
-
 }
