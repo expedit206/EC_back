@@ -17,7 +17,7 @@ class ParrainageController extends Controller
      */
     public function dashboard(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -32,7 +32,7 @@ class ParrainageController extends Controller
         });
         $totalGains = $this->calculateTotalGains($user->id);
         $totalParrainages = $parrainages->count();
-        
+
         // Récupérer les niveaux et déterminer le niveau actuel
         $niveaux = ParrainageNiveau::orderBy('filleuls_requis')->get();
         $niveauActuel = $niveaux->Where('filleuls_requis', '<=', $totalParrainages)->last() ?? $niveaux->first();
@@ -46,11 +46,11 @@ class ParrainageController extends Controller
         // ($totalParrainages - $niveauActuel->filleuls_requis)/
         //   ($niveauSuivant
         //   ->filleuls_requis - $niveauActuel->filleuls_requis)
-    // ]);
+        // ]);
         $progression = $totalParrainages > 0 && $niveauSuivant
-        ? (($totalParrainages - $niveauActuel->filleuls_requis) / ($niveauSuivant->filleuls_requis - $niveauActuel->filleuls_requis)) * 100
-        : 0;
-        
+            ? (($totalParrainages - $niveauActuel->filleuls_requis) / ($niveauSuivant->filleuls_requis - $niveauActuel->filleuls_requis)) * 100
+            : 0;
+
         return response()->json([
             'code' => $user->parrainage_code,
             'parrainages' => $parrainages,
@@ -95,13 +95,13 @@ class ParrainageController extends Controller
      */
     public function generateCode(Request $request)
     {
-        $user = $request->user;
-        
+        $user = $request->user();
+
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        $suggestedCode = Str::random(3) . '' .Str::slug($user->nom);
+        $suggestedCode = Str::random(3) . '' . Str::slug($user->nom);
         $suggestedCode = strtoupper(substr($suggestedCode, 0, 6));
 
         while (User::where('parrainage_code', $suggestedCode)->exists()) {
@@ -117,7 +117,7 @@ class ParrainageController extends Controller
      */
     public function createCode(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -149,6 +149,6 @@ class ParrainageController extends Controller
     protected function calculateTotalGains($userId)
     {
         $commercantsParraines = User::where('parrain_id', $userId)->whereHas('commercant')->get();
-        return $commercantsParraines->count() ; // 1 jeton (500 FCFA) par commerçant actif
+        return $commercantsParraines->count(); // 1 jeton (500 FCFA) par commerçant actif
     }
 }

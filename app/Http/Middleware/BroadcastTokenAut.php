@@ -17,7 +17,7 @@ class BroadcastTokenAuth
         }
 
         // On suppose que le token est stocké en clair
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response('Unauthorized', 401);

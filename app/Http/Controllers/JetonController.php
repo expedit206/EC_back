@@ -14,19 +14,19 @@ class JetonController extends Controller
 {
     public function acheterJetons(Request $request)
     {
-        $user =$request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
-        
+
         // Valider les données
         $validated = $request->validate([
             'nombre_jetons' => 'required|integer|min:10',
             'payment_service' => 'required|in:ORANGE,MTN,AIRTEL',
             'phone_number' => 'required|regex:/^6[0-9]{8}$/',
         ]);
-        
+
         $nombreJetons = $validated['nombre_jetons'];
         $paymentService = $validated['payment_service'];
         $phoneNumber = $validated['phone_number'];
@@ -40,8 +40,8 @@ class JetonController extends Controller
         );
 
         $nonce = RandomGenerator::nonce();
-        
-        
+
+
         // return response()->json([
         //     'amount' => $montant, // Convertir en centimes
         //     'service' => $paymentService,

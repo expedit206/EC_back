@@ -40,7 +40,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     // Routes protégées
     // Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('user', [UserController::class, 'profile']);
+
+    Route::get('/conversations', [ChatController::class, 'conversations']);
+
+    Route::get('user', [UserController::class, 'profile']);
         Route::get('produits', [ProduitController::class, 'index']);
 
     Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
@@ -98,10 +101,8 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
     Route::get('/chat/{receiverId}', [ChatController::class, 'index']);
     Route::post('/chat/{receiverId}', [ChatController::class, 'store']);
-    Route::get('/conversations', [ChatController::class, 'conversations']);
     Route::put('/messages/mark-all-as-read', [ChatController::class, 'markAllAsRead']);
     
-    Route::get('/conversations', [ChatController::class, 'conversations']);
 
 
 Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPremium']);

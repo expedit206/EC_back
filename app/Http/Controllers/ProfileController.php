@@ -94,7 +94,7 @@ class ProfileController extends Controller
 
     public function updateProfilePhoto(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         $request->validate([
             'photo' => 'required|image|max:2048', // Limite à 2 Mo et accepte uniquement les images

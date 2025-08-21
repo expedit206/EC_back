@@ -33,7 +33,7 @@ class CommercantController extends Controller
 
     public function storeProduit(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
         // return response()->json(['message' => $request->all()]);
         if (!$user->commercant) {
         }
@@ -58,7 +58,7 @@ class CommercantController extends Controller
                 $photos[] = asset('storage/' . $path); // Génère l'URL publique
             }
         }
-// return response()->json(['message' => $photos]);
+        // return response()->json(['message' => $photos]);
         $produit = Produit::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'commercant_id' => $user->commercant->id,
@@ -68,8 +68,8 @@ class CommercantController extends Controller
             'prix' => $validated['prix'],
             'photos' => $photos, // Stocker les URLs en JSON
             // 'photos' => json_encode($photos), // Stocker les URLs en JSON
-            'collaboratif' => $validated['collaboratif'] =='false' ? 0 : 1,
-            'marge_min' => $validated['marge_min']??null,
+            'collaboratif' => $validated['collaboratif'] == 'false' ? 0 : 1,
+            'marge_min' => $validated['marge_min'] ?? null,
             'quantite' => $validated['stock'],
             'ville' => $validated['ville'] ?? 'aucun',
         ]);
@@ -81,7 +81,7 @@ class CommercantController extends Controller
     public function updateProduit(Request $request, $id)
     {
         // Récupérer l'utilisateur authentifié
-        $user = $request->user;
+        $user = $request->user();
         $produit = Produit::where('commercant_id', $user->commercant->id)->findOrFail($id);
 
         // Validation des données
@@ -139,7 +139,7 @@ class CommercantController extends Controller
         return response()->json(['produit' => $produit], 200);
     }
 
-    public function destroyProduit(Produit $produit, Request $request )
+    public function destroyProduit(Produit $produit, Request $request)
     {
         // $commercant = $request->user->load('commercant');
 
@@ -150,7 +150,7 @@ class CommercantController extends Controller
 
     public function profil(Request $request)
     {
-         $request->user->load('commercant',);
+        $request->user->load('commercant',);
         $commercant = $request->user->commercant;
         return response()->json(['commercant' => $commercant]);
     }
@@ -170,7 +170,7 @@ class CommercantController extends Controller
     public function rate(Request $request, $id)
     {
         $commercant = Commercant::findOrFail($id);
-        $user = $request->user; 
+        $user = $request->user();
 
         // Vérifier si l'utilisateur a déjà noté
         $existingRating = $commercant->ratings()->where('user_id', $user->id)->first();
@@ -181,9 +181,9 @@ class CommercantController extends Controller
         $request->validate([
             'rating' => 'required|integer|between:1,5',
         ]);
-        
+
         // return response()->json(['message' => $request->all()]);
-        
+
 
         $commercant->ratings()->create([
             'user_id' => $user->id,
@@ -198,7 +198,7 @@ class CommercantController extends Controller
             'average_rating' => $averageRating,
         ]);
     }
-    
+
     public function updateProfil(Request $request)
     {
         $commercant = $request->user->load('commercant');
@@ -213,31 +213,31 @@ class CommercantController extends Controller
         return response()->json(['commercant' => $commercant]);
     }
 
-  
+
     public function create(Request $request)
     {
-        $user = $request->user;
-        
+        $user = $request->user();
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'ville' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'logo' => 'nullable|string|max:255', // URL du logo
-            
-            
+
+
         ]);
-        
-        
+
+
         // Créer le compte commerçant (actif par défaut)
         $commercant = Commercant::create([
             'user_id' => $user->id,
-            'nom' => $validated['nom']??null,
-            'ville' => $validated['ville']??null,
-            'description' => $validated['description']??null,
+            'nom' => $validated['nom'] ?? null,
+            'ville' => $validated['ville'] ?? null,
+            'description' => $validated['description'] ?? null,
             'logo' => $validated['logo'] ?? null,
-            
+
         ]);
-        
+
         // Mettre à jour le parrainage si l'utilisateur a un parrain
         if ($user->parrain_id) {
             // return response()->json(['m²essage' => $this->updateParrainage($user->parrain_id) ]);
@@ -253,28 +253,28 @@ class CommercantController extends Controller
         if (!$parrain) {
             return;
         }
-        
+
         // Compter uniquement les filleuls commerçants
         $filleuls_commercants = User::where('parrain_id', $parrain_id)
-        ->whereHas('commercant')
-        ->count();
-        
+            ->whereHas('commercant')
+            ->count();
+
         // Récupérer ou créer l'entrée dans niveaux_users
         $niveau_actuel = $parrain->niveaux_users()->where('statut', 'actif')->latest('date_atteinte')->first();
         $niveau_id = $this->determinerNiveau($filleuls_commercants);
-        
+
         if (!$niveau_actuel || $niveau_actuel->niveau_id != $niveau_id) {
             $niveau = ParrainageNiveau::find($niveau_id);
             $niveau_user = $parrain->niveaux_users()->create([
-                
-                'user_id'=> $parrain->id,
+
+                'user_id' => $parrain->id,
                 'niveau_id' => $niveau_id,
                 'date_atteinte' => now(),
                 'jetons_attribues' => $niveau->jetons_bonus,
                 'nombre_filleuls_actuels' => $filleuls_commercants,
             ]);
             // return response()->json(['message' => $filleuls_commercants]);
-            
+
             // Mettre à jour les jetons totaux
             $parrain->increment('jetons', $niveau->jetons_bonus);
             $parrain->save();
@@ -296,7 +296,7 @@ class CommercantController extends Controller
 
     public function getParrainage(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
         $filleuls_commercants = User::where('parrain_id', $user->id)->whereHas('commercant')->count();
         $niveau = $user->niveaux_users()->where('statut', 'actif')->with('niveau')->latest('date_atteinte')->first();
 

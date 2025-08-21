@@ -19,7 +19,7 @@ class ChatController extends Controller
     {
         // return response()->json(['conversations' => '$conversations']);
 
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -49,7 +49,7 @@ class ChatController extends Controller
      */
     public function index($receiverId, Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -78,7 +78,7 @@ class ChatController extends Controller
      */
     public function store(Request $request, $receiverId)
     {
-        $user =$request->user;
+        $user =$request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -107,6 +107,7 @@ class ChatController extends Controller
         $message->content = $validated['content'];
         $message->product_id = $validated['product_id']??null;
         $message->save();
+        // broadcast(new MessageSent($user, $message))->toOthers();
 
         broadcast(new MessageSent($message))->toOthers();
         // return response()->json(['message' => event(new MessageSent($message))]);
@@ -118,7 +119,7 @@ class ChatController extends Controller
     public function markAllAsRead(Request $request)
     {
        
-        $user = $request->user;
+        $user = $request->user();
         Message::where('receiver_id', $user->id)
             ->where('is_read', false)
             ->update(['is_read' => true]);

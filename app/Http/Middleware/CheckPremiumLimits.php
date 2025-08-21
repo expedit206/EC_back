@@ -10,7 +10,7 @@ class CheckPremiumLimits
 {
     public function handle(Request $request, Closure $next, $limitType = null)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);

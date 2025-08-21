@@ -30,7 +30,7 @@ class ProduitController extends Controller
         $prixMax = $request->query('prix_max');
         $ville = $request->query('ville', $request->use?->ville);
         $collaboratif = $request->query('collaboratif');
-        $user = $request->user;
+        $user = $request->user();
         $page = $request->query('page', 1);
 
         // return response()->json(['message' => $request->all()]   );
@@ -112,11 +112,11 @@ class ProduitController extends Controller
 
         return response()->json($produits);
     }
-    
-   
+
+
     public function show($id, Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
         $produit = Produit::with(['commercant.user', 'category'])
             ->withCount('favorites')
             ->findOrFail($id);
@@ -137,7 +137,7 @@ class ProduitController extends Controller
                     'produit_id' => $id,
                     'user_id' => $user->id,
                 ]);
-                
+
                 Redis::incr("produit:views:{$id}");
             }
         }
@@ -146,7 +146,7 @@ class ProduitController extends Controller
 
         return response()->json(['produit' => $produit]);
     }
-    
+
     public function recordView(Request $request)
     {
         $validated = $request->validate([
@@ -181,7 +181,7 @@ class ProduitController extends Controller
             return response()->json(['message' => 'Vue déjà enregistrée'], 200);
         }
     }
-    
+
 
     public function toggleFavorite($id, Request $request)
     {
@@ -189,7 +189,7 @@ class ProduitController extends Controller
         $produit = Produit::findOrFail($id);
 
         // Récupérer l'utilisateur authentifié
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Connexion requise'], 401);
@@ -198,34 +198,31 @@ class ProduitController extends Controller
         $favorite = ProductFavorite::where('produit_id', $id)
             ->where('user_id', $user->id)
             ->first();
-            // Supprimer le favori
-            
-            if ($favorite) {
-                $favorite->delete();
-                
-          
-                $produit->counts()->updateOrCreate(
-                    ['produit_id' => $id],
-                    ['favorites_count' => DB::raw('favorites_count-1')]
-                );
-                return response()->json(['message' => 'Produit retiré des favoris']);
+        // Supprimer le favori
 
+        if ($favorite) {
+            $favorite->delete();
+
+
+            $produit->counts()->updateOrCreate(
+                ['produit_id' => $id],
+                ['favorites_count' => DB::raw('favorites_count-1')]
+            );
+            return response()->json(['message' => 'Produit retiré des favoris']);
         } else {
             // Ajouter le favori
             ProductFavorite::create([
                 'produit_id' => $id,
                 'user_id' => $user->id,
             ]);
-            
+
             // Incrémenter favorites_count dans product_counts
             $produit->counts()->updateOrCreate(
                 ['produit_id' => $id],
                 ['favorites_count' => DB::raw('favorites_count + 1')]
             );
             return response()->json(['message' => 'Produit ajouté aux favoris']);
-
         }
-
     }
 
     public function store(Request $request)
@@ -242,7 +239,7 @@ class ProduitController extends Controller
             'marge_min' => 'nullable|numeric|min:0',
         ]);
 
-        $user = $request->user;
+        $user = $request->user();
         $commercant = Commercant::where('user_id', $user->id)->first();
 
         if (!$commercant) {
@@ -276,25 +273,25 @@ class ProduitController extends Controller
     public function boost(Request $request, $id)
     {
         $produit = Produit::findOrFail($id);
-        
+
         if ($produit->commercant_id !== $request->user->commercant->id) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
-        
+
         // Vérifier s'il existe déjà un boost actif
         $activeBoost = Boost::where('produit_id', $id)
-        ->where('statut', 'actif')
+            ->where('statut', 'actif')
             ->where('end_date', '>', now())
             ->first();
 
-            if ($activeBoost) {
-                return response()->json(['message' => 'Un boost est déjà actif pour ce produit'], 400);
-            }
-            
-            // Coût du boost (ex. : 50 Jetons pour 3 jours)
+        if ($activeBoost) {
+            return response()->json(['message' => 'Un boost est déjà actif pour ce produit'], 400);
+        }
+
+        // Coût du boost (ex. : 50 Jetons pour 3 jours)
         $coutJetons = 50;
-        $user = $request->user; 
-        
+        $user = $request->user();
+
         // return response()->json(['message' => $user->jetons, ]);
         if ($user->jetons < $coutJetons) {
             return response()->json(['message' => 'Pas assez de Jetons'], 400);

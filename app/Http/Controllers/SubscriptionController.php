@@ -13,12 +13,12 @@ class SubscriptionController extends Controller
 {
     public function upgradeToPremium(Request $request)
     {
-        $user = $request->user;
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
-        
+
         // Valider le type d'abonnement
         $validated = $request->validate([
             'subscription_type' => 'required|in:monthly,yearly',
@@ -26,7 +26,7 @@ class SubscriptionController extends Controller
 
             'phone_number' => 'required|regex:/^6[0-9]{8}$/', // 9 chiffres commençant par 6
         ]);
-            // return respons   e()->json(['message' => 'Utilisateur non authentifié']);
+        // return respons   e()->json(['message' => 'Utilisateur non authentifié']);
 
 
         $subscriptionType = $validated['subscription_type'];
@@ -37,17 +37,17 @@ class SubscriptionController extends Controller
         //mesomb pour paiement
 
         $mesomb = new PaymentOperation(
-    env('MESOMB_APPLICATION_KEY'),
-    env('MESOMB_ACCESS_KEY'),
-    env('MESOMB_SECRET_KEY'),
-);
+            env('MESOMB_APPLICATION_KEY'),
+            env('MESOMB_ACCESS_KEY'),
+            env('MESOMB_SECRET_KEY'),
+        );
 
         $nonce = RandomGenerator::nonce();
 
 
         // Appel à makeCollect avec le numéro dynamique
         $response = $mesomb->makeCollect([
-            'amount' => $amount , // Convertir en centimes
+            'amount' => $amount, // Convertir en centimes
             'service' => $paymentService,
             'payer' => $phoneNumber, // Utiliser le numéro fourni
             'nonce' => $nonce,
@@ -81,7 +81,7 @@ class SubscriptionController extends Controller
             return response()->json(['message' => $response], 400);
         }
 
-     
+
 
         // Mettre à jour is_premium à 1
         $user->update(['is_premium' => 1]);

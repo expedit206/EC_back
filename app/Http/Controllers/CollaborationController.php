@@ -12,8 +12,8 @@ class CollaborationController extends Controller
 {
     public function index(Request $request)
     {
-        // $user = $request->user;
-        $user = $request->user;
+        // $user = $request->user();
+        $user = $request->user();
         $collaborations = Collaboration::with('produit')->where('user_id', $user->id)->get();
         return response()->json(['collaborations' => $collaborations]);
     }
@@ -23,7 +23,7 @@ class CollaborationController extends Controller
             'produit_id' => 'required|uuid|exists:produits,id',
             'prix_revente' => 'required|numeric|min:0',
         ]);
-        $user = $request->user;
+        $user = $request->user();
         // $produit = Produit::findOrFail($request->produit_id);
         $produit = Produit::findOrFail($data['produit_id']);
         if ($user->commercant && $user->commercant->id === $produit->commercant_id) {
