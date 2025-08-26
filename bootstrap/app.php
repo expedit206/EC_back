@@ -35,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // SubstituteBindings::class, // Liaison des modèles
         // VerifyCsrfToken::class,
 
-        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        // \Illuminate\Routing\Middleware\SubstituteBindings::class,
         // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
     ]);
     $middleware->web(append: [
@@ -50,7 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'auth.token' => AuthToken::class,
         'broadcast.token' => \App\Http\Middleware\BroadcastTokenAuth::class,
         'premium' => \App\Http\Middleware\CheckPremiumLimits::class,
-        'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        // 'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
 
 
     ]);

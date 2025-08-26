@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 
 class ChatController extends Controller
 {
@@ -79,7 +80,7 @@ class ChatController extends Controller
     public function store(Request $request, $receiverId)
     {
         $user =$request->user();
-
+        
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
@@ -88,31 +89,40 @@ class ChatController extends Controller
             'content' => 'required|string|max:1000',
             'product_id' => 'nullable|exists:produits,id',
         ]);
-
-        // return response()->json(['message' => [
-        //     'sender_id' => $user->id,
-        //     'receiver_id' => $receiverId,
-        //     'content' => $validated['content'],
-        // ]], 401);
-        // $message= DB::table('messages')->insert([
-        //     'sender_id' => $user->id,
-        //     'receiver_id' => $receiverId,
-        //     'content' => $validated['content'],
-        //     'created_at' => now(),
-        //     'updated_at' => now(),
-        // ]);
-        $message = new Message();
-        $message->sender_id = $user->id;
-        $message->receiver_id = $receiverId;
-        $message->content = $validated['content'];
-        $message->product_id = $validated['product_id']??null;
-        $message->save();
-        // broadcast(new MessageSent($user, $message))->toOthers();
-
-        broadcast(new MessageSent($message))->toOthers();
-        // return response()->json(['message' => event(new MessageSent($message))]);
         
-        return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
+        // \Log::info("Événement MessageSent déclenché", ['message' => $message]);
+     
+                $message = new Message();
+                $message->sender_id = $user->id;
+                $message->receiver_id = $receiverId;
+                $message->content = $validated['content'];
+                $message->product_id = $validated['product_id']??null;
+                $message->save();
+                // broadcast(new MessageSent($message));
+                
+                // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
+        Broadcast(new MessageSent($message));
+        // event(new MessageSent   ("Hello depuis Laravel 🚀"));
+
+        // ->toOthers();
+        // return response()->json(['message' => event(new MessageSent($message))]);
+        // \Log::info('Broadcast auth request', [
+        //     'USER' => $request->user(),
+        //     'all_request' => $request->all(),
+        //     'headers' => $request->headers->all(),
+        //     'cookies' => $request->cookies->all(),
+        //     'session_id' => $request->session()->getId(),
+        //     'user_authenticated' => Auth::check(),
+        //     'user_id' => Auth::id(),
+        //     // 'broad' => Broadcast::auth(
+        //     // $request),
+        // ]);
+        return response()->json(['message' => 'Message envoyé avec succès',
+         'message_data' =>   \Auth::check(),
+        //  'message_data' =>  event(new MessageSent($message))
+         
+        //  'message_data' =>  Broadcast::auth($request)
+], 201);
     }
 
     

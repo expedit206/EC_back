@@ -4,17 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Message;
-use App\Models\Parrainage;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Collaboration;
-use Illuminate\Support\Carbon;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
+    // Inscription
     public function register(Request $request)
     {
         $request->validate([
@@ -36,7 +34,7 @@ class UserController extends Controller
             'parrain_id' => $request->parrain_id,
         ]);
 
-        // Génère un vrai token Sanctum
+        // Générer un token API pour Bearer Auth
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -46,6 +44,7 @@ class UserController extends Controller
         ], 201);
     }
 
+    // Connexion
     public function login(Request $request)
     {
         $request->validate([
@@ -56,33 +55,44 @@ class UserController extends Controller
         $field = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'telephone';
         $user = User::where($field, $request->input('login'))->first();
 
-        if (!$user || !Hash::check($request->input('mot_de_passe'), $user->mot_de_passe)) {
+        if (!$user || !Hash::check($request->mot_de_passe, $user->mot_de_passe)) {
             throw ValidationException::withMessages([
                 'login' => ['Les informations d\'identification sont incorrectes.'],
             ]);
         }
 
-        // Supprimer les anciens tokens si tu veux session unique
-        $user->tokens()->delete();
+        // ✅ Authentifier avec session (Sanctum "cookie-based")
+        Auth::login($user); // true = remember me
 
-        // Créer un nouveau token Sanctum
+        // ✅ Si tu veux aussi supporter l’auth via Bearer Token (API)
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        \Log::info('Broadcast auth request', [
+            'USER' => $request->user(), // doit maintenant renvoyer l'user
+            'headers' => $request->headers->all(),
+            'cookies' => $request->cookies->all(),
+            'session_id' => $request->session()->getId(),
+            'user_authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+        ]);
 
         return response()->json([
             'message' => 'Connexion réussie',
             'user' => $user,
             'token' => $token,
-        ], 200);
+        ]);
     }
 
+
+    // Déconnexion
     public function logout(Request $request)
     {
-        // Supprime seulement le token utilisé
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Déconnexion réussie'], 200);
     }
 
+    // Mettre à jour les notifications
     public function updateNotifications(Request $request)
     {
         $user = $request->user();
@@ -97,6 +107,7 @@ class UserController extends Controller
         return response()->json(['user' => $user]);
     }
 
+    // Compteurs pour badges
     public function badges(Request $request)
     {
         $user = $request->user();
@@ -114,20 +125,20 @@ class UserController extends Controller
             'unread_messages' => $unreadMessagesCount,
         ]);
     }
+
+    // Récupérer le profil utilisateur
     public function profile(Request $request)
     {
-        $user = $request->user(); // ✅ Récupère l'utilisateur à partir du token
+        $user = $request->user();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        // Charger les relations nécessaires
         $user->load('commercant', 'niveaux_users.parrainageNiveau');
 
         return response()->json([
-            'user' => $request->user(),
-            'request' => $request->bearerToken(),
+            'user' => $user,
         ]);
     }
 }

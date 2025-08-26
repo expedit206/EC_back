@@ -1,19 +1,19 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\JetonController;
 use App\Http\Controllers\StatsController;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\CommercantController;
-use App\Http\Controllers\ParrainageController;
-use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\CollaborationController;
 
 Route::get('/redis-test', function () {
     Redis::set('test_key', 'Hello Redis!');
@@ -21,16 +21,22 @@ Route::get('/redis-test', function () {
 });
 // Route::post('register', [UserController::class, 'register']);
 // Route::middleware('guest')->group(function () {
-// Route::post('/login', [UserController::class, 'login']);
-// });
-// Routes protégées
+    // });
+    // Routes protégées
     // Authentification
     // Route::post('register', [UserController::class, 'register']);
+use App\Http\Controllers\ParrainageController;
+use App\Http\Controllers\SubscriptionController;
 
+use Illuminate\Broadcasting\BroadcastController;
+use App\Http\Controllers\CollaborationController;
 
-    // Route::post('register', [UserController::class, 'register']);
-    Route::post('login', [UserController::class, 'login']);
+Route::post('/login', [UserController::class, 'login']);
+// Route::post('register', [UserController::class, 'register']);
 
+// Route::post('/broadcasting/aut', function () {
+//     return \Auth::user();
+// });
 
 Route::get('/', function () {
     return view('welcome'); // Laravel va chercher resources/views/welcome.blade.php
@@ -41,6 +47,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     // Route::get('produits', [ProduitController::class, 'index']);
     Route::middleware('auth:sanctum')->group(function () {
 
+
+
+
+        
     Route::get('/conversations', [ChatController::class, 'conversations']);
 
     Route::get('user', [UserController::class, 'profile']);
@@ -49,8 +59,6 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);
 
-    // Dans routes/web.php
-    // dd(config('broadcasting.default'));
 
     // Route::post('produits', [ProduitController::class, 'store'])->middleware('premium:product');
 

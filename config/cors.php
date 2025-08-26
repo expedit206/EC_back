@@ -1,7 +1,7 @@
     <?php
     return [
 
-        'paths' => ['api/v1/*', 'broadcasting/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+        'paths' => ['api/v1/*', 'broadcasting/auth', 'sanctum/csrf-cookie', 'login', 'logout'],
 
         'allowed_methods' => ['*'],
 
@@ -9,6 +9,7 @@
         'allowed_origins' => [
             'http://localhost:5173',
             'http://localhost:4000',
+            'http://localhost:8000',
             'https://escameroun.devfack.com',
         ],
 
