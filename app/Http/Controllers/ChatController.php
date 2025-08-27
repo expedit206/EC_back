@@ -101,9 +101,10 @@ class ChatController extends Controller
                 // broadcast(new MessageSent($message));
                 
                 // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
-        Broadcast(new MessageSent($message));
+        Broadcast(new MessageSent($message->load('sender', 'receiver')));
         // event(new MessageSent   ("Hello depuis Laravel 🚀"));
 
+        
         // ->toOthers();
         // return response()->json(['message' => event(new MessageSent($message))]);
         // \Log::info('Broadcast auth request', [
