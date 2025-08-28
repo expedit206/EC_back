@@ -17,8 +17,11 @@ return [
 
     'stateful' => [
         'localhost:4000',
+        'localhost:5500',
         '127.0.0.1:4000',
+        '127.0.0.1:5500',
         'tonfront.com',
+        'escameroun.devfack.com'
     ],
 
     // 'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
