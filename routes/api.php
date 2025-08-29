@@ -32,7 +32,7 @@ use Illuminate\Broadcasting\BroadcastController;
 use App\Http\Controllers\CollaborationController;
 
 Route::post('/login', [UserController::class, 'login']);
-// Route::post('register', [UserController::class, 'register']);
+Route::post('register', [UserController::class, 'register']);
 
 // Route::post('/broadcasting/aut', function () {
 //     return \Auth::user();
