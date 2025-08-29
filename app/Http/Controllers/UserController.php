@@ -45,6 +45,7 @@ class UserController extends Controller
     }
 
     // Connexion
+    // Connexion
     public function login(Request $request)
     {
         $request->validate([
@@ -61,20 +62,9 @@ class UserController extends Controller
             ]);
         }
 
-        // ✅ Authentifier avec session (Sanctum "cookie-based")
-        Auth::login($user); // true = remember me
-
-        // ✅ Si tu veux aussi supporter l’auth via Bearer Token (API)
+        // ✅ On ne fait pas Auth::login() (cookie)
+        // ✅ On crée uniquement un token Sanctum (Bearer)
         $token = $user->createToken('auth_token')->plainTextToken;
-
-        \Log::info('Broadcast auth request', [
-            'USER' => $request->user(), // doit maintenant renvoyer l'user
-            'headers' => $request->headers->all(),
-            'cookies' => $request->cookies->all(),
-            'session_id' => $request->session()->getId(),
-            'user_authenticated' => Auth::check(),
-            'user_id' => Auth::id(),
-        ]);
 
         return response()->json([
             'message' => 'Connexion réussie',
@@ -84,13 +74,14 @@ class UserController extends Controller
     }
 
 
+
     // Déconnexion
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Déconnexion réussie'], 200);
     }
+
 
     // Mettre à jour les notifications
     public function updateNotifications(Request $request)
