@@ -1,6 +1,7 @@
 *.log
 .DS_Store
 .env
+.envp
 .htaccess
 .env.backup
 .env.production
