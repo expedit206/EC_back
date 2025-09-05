@@ -9,8 +9,10 @@ use App\Models\Category;
 use App\Models\Commercant;
 use App\Models\ProductView;
 use App\Models\ProductCount;
+use Illuminate\Http\Request;
 use App\Models\Collaboration;
 use App\Models\ProductFavorite;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,7 +37,8 @@ class Produit extends Model
         'quantite',
         'photos',
         'collaboratif',
-        'marge_min'
+        'marge_min',
+        'original_commercant_id'
     ];
     // protected $appends = ['favorites_count', 'views_count'];
     
@@ -69,11 +72,7 @@ class Produit extends Model
         return $this->hasMany(ProductView::class);
     }
 
-    // public function getViewsCountAttribute()
-    // {
-    //     $key = "produit:views:{$this->id}";
-    //     return Redis::get($key) ?? $this->views()->count();
-    // }
+   
 
 
     public function getFavoritesCountAttribute()
@@ -99,4 +98,29 @@ class Produit extends Model
     }
 
 
+    public function originalCommercant()
+    {
+        return $this->belongsTo(Commercant::class, 'original_commercant_id');
+    }
+    
+    public function isFavoritedByUser($user = null)
+    {
+        if ($user) {
+            return ProductFavorite::where('produit_id', $this->id)
+                ->where('user_id', $user->id)
+                ->exists();
+        }
+        return false; // Retourne false si aucun utilisateur
+    }
+
+    // Méthode pour obtenir la date de fin du boost
+    public function getBoostedUntilAttribute()
+    {
+        $boost = $this->boosts()
+            ->where('statut', 'actif')
+            ->where('end_date', '>', now())
+            ->latest('end_date')
+            ->first();
+        return $boost ? $boost->end_date : null;
+    }
 }

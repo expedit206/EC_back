@@ -23,7 +23,7 @@ class Commercant extends Model
         });
     }
 
-    protected $fillable = ['id', 'user_id', 'nom', 'description', 'logo', 'ville'];
+    protected $fillable = ['id', 'user_id', 'nom', 'description', 'logo', 'ville', 'telephone', 'email'];
 
     public function user()
     {

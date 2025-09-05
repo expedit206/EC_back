@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('produits', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('commercant_id')->references('id')->on('commercants')->onDelete('cascade');
+            $table->foreignUuid('original_commercant_id')->nullable()->references('id')->on('commercants')->onDelete('cascade');
             $table->string('nom');
             $table->text('description')->nullable();
             $table->decimal('prix', 10, 2);

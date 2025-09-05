@@ -3,19 +3,22 @@
 // app/Models/Collaboration.php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
+use App\Models\Produit;
+use App\Models\Commercant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Collaboration extends Model
 {
     use HasFactory;
-    protected $keyType = 'string';
-    public $incrementing = false;
+    // protected $keyType = 'string';
+    // public $incrementing = false;
 
     protected $fillable = [
         'id',
         'produit_id',
-        'user_id',
+        'commercant_id',
         'prix_revente',
         'statut',
         'gains_totaux'
@@ -30,8 +33,8 @@ class Collaboration extends Model
         return $this->belongsTo(Produit::class);
     }
 
-    public function user()
+    public function commercant()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Commercant::class);
     }
 }

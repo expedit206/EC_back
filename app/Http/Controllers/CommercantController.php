@@ -16,7 +16,7 @@ class CommercantController extends Controller
 {
     public function produits(Request $request)
     {
-        $user = $request->user->load('commercant');
+        $user = $request->user()->load('commercant');
         // return response()->json($);
         if (!$user->commercant) {
             return response()->json(['message' => 'Accès réservé aux commerçants'], 403);
@@ -141,7 +141,7 @@ class CommercantController extends Controller
 
     public function destroyProduit(Produit $produit, Request $request)
     {
-        // $commercant = $request->user->load('commercant');
+        // $commercant = $request->user()->load('commercant');
 
         // $produit = Produit::where('commercant_id', $commercant->id)->findOrFail($id);
         $produit->delete();
@@ -150,8 +150,8 @@ class CommercantController extends Controller
 
     public function profil(Request $request)
     {
-        $request->user->load('commercant',);
-        $commercant = $request->user->commercant;
+        $request->user()->load('commercant',);
+        $commercant = $request->user()->commercant;
         return response()->json(['commercant' => $commercant]);
     }
 
@@ -201,16 +201,60 @@ class CommercantController extends Controller
 
     public function updateProfil(Request $request)
     {
-        $commercant = $request->user->load('commercant');
+        // Charger l'utilisateur authentifié avec sa relation commerçant
+        $user = $request->user()->load('commercant');
 
+        // Vérifier si l'utilisateur a un profil commerçant
+        if (!$user->commercant) {
+            return response()->json(['message' => 'Profil commerçant non trouvé.'], 404);
+        }
+
+        // Validation des données
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'email' => 'nullable|email|max:255', // Ajout du champ email
+            'telephone' => 'required|string|max:20',
             'ville' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation pour le logo (max 2Mo)
         ]);
 
-        $commercant->update($validated);
-        return response()->json(['commercant' => $commercant]);
+        // return response()->json([
+        //     'success' => true,
+        //     'commercant' => $validated,
+        // ], 200);
+
+        // Préparer les données pour la mise à jour
+        $data = [
+            'nom' => $validated['nom'],
+            'description' => $validated['description'],
+            'email' => $validated['email'],
+            'telephone' => $validated['telephone'],
+            'ville' => $validated['ville'],
+        ];
+
+        // Gérer le téléchargement du logo si présent
+        if ($request->hasFile('logo')) {
+            // Supprimer l'ancien logo si existant
+            if ($user->commercant->logo) {
+                Storage::delete('public/commercant/logos/' . basename($user->commercant->logo));
+            }
+
+            // Stocker le nouveau logo
+            $logoPath = $request->file('logo')->store('commercant/logos', 'public');
+            $data['logo'] = $logoPath;
+        }
+
+        // Mettre à jour le profil du commerçant
+        $user->commercant->update($data);
+
+        // Recharger la relation pour retourner les données mises à jour
+        $updatedCommercant = $user->commercant->fresh();
+
+        return response()->json([
+            'success' => true,
+            'commercant' => $updatedCommercant,
+        ], 200);
     }
 
 

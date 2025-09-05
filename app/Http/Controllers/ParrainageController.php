@@ -82,6 +82,7 @@ class ParrainageController extends Controller
                 'id' => $niveau->id,
                 'nom' => $niveau->nom,
                 'emoji' => $niveau->emoji,
+                'couleur' => $niveau->couleur,
                 'filleuls_requis' => $niveau->filleuls_requis,
                 'jetons_bonus' => $niveau->jetons_bonus,
                 'avantages' => json_decode($niveau->avantages, true),

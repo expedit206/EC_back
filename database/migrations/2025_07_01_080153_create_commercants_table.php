@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('commercants', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('nom');
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->string('ville');
+            $table->string('telephone')->nullable(); // Ajout du champ téléphone
+            $table->string('email')->nullable();     // Ajout du champ email
+            $table->integer('active_products')->default(0); // Champ optionnel pour les produits actifs
             $table->timestamps();
         });
     }

@@ -70,7 +70,7 @@ class UserController extends Controller
             'message' => 'Connexion réussie',
             'user' => $user,
             'token' => $token,
-        ]);
+        ]);     
     }
 
 
@@ -102,9 +102,21 @@ class UserController extends Controller
     public function badges(Request $request)
     {
         $user = $request->user();
+        $commercant = $user->commercant; // Récupérer le commerçant associé à l'utilisateur
 
-        $collaborationsPendingCount = Collaboration::where('user_id', $user->id)
-            ->where('statut', 'en_attente')
+        if (!$commercant) {
+            return response()->json([
+                'collaborations_pending' => 0,
+                'unread_messages' => 0,
+            ]);
+        }
+
+        $collaborationsPendingCount = Collaboration::where(function ($query) use ($commercant) {
+            $query->where('commercant_id', $commercant->id) // Collaborations initiées par ce commerçant
+                ->orWhereHas('produit.commercant', function ($query) use ($commercant) {
+                    $query->where('id', $commercant->id); // Collaborations où ce commerçant est le propriétaire
+                });
+        })->where('statut', 'en_attente')
             ->count();
 
         $unreadMessagesCount = Message::where('receiver_id', $user->id)

@@ -45,7 +45,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 // Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
     // Routes protégées
     // Route::get('produits', [ProduitController::class, 'index']);
+    Route::post('/record_view', [ProduitController::class, 'recordView']);
+    
     Route::middleware('auth:sanctum')->group(function () {
+    Route::get('produits', [ProduitController::class, 'index']);
 
 
 
@@ -54,7 +57,6 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('/conversations', [ChatController::class, 'conversations']);
 
     Route::get('user', [UserController::class, 'profile']);
-        Route::get('produits', [ProduitController::class, 'index']);
 
     Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);
@@ -64,7 +66,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
 
         Route::post('collaborations', [CollaborationController::class, 'store']);
-        Route::patch('collaborations/{id}', [CollaborationController::class, 'update']);
+        Route::post('collaborations/{id}', [CollaborationController::class, 'update']);
     Route::get('/collaborations', [CollaborationController::class, 'index'])->name('collaborations.index');
         
         // Route::post('abonnements', [AbonnementController::class, 'store']);
@@ -76,7 +78,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::post('/commercant/produits', [CommercantController::class, 'storeProduit'])->name('commercant.produits.store')->middleware('premium:product');
     Route::delete('/commercant/produits/{produit}', [CommercantController::class, 'destroyProduit'])->name('commercant.produits.destroy');
     Route::get('/commercant/profil', [CommercantController::class, 'profil'])->name('commercant.profil');
-    Route::put('/commercant/profil', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
+    Route::post('/commercant/update', [CommercantController::class, 'updateProfil'])->name('commercant.profil.update');
     Route::post('/commercant/produits/{id}', [CommercantController::class, 'updateProduit'])->name('commercant.produits.update');
     Route::get('/commercant/{commercant}', [CommercantController::class, 'show'])->name('commercant.show');
     Route::post('/commercant/{commercantId}/rate', [CommercantController::class, 'rate']);
@@ -102,7 +104,6 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('/parrainages/niveaux', [ParrainageController::class, 'getAllNiveaux']);
 
     Route::post('/produits/{id}/boost', [ProduitController::class, 'boost']);
-    Route::post('/record_view', [ProduitController::class, 'recordView']);
 
 
     Route::get('/stats', [StatsController::class, 'index']);

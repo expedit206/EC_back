@@ -1,32 +1,56 @@
 <?php
 
-// app/Http/Controllers/CollaborationController.php
 namespace App\Http\Controllers;
 
-use App\Models\Collaboration;
-use App\Models\Produit;
-use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
+use App\Models\Produit;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\Collaboration;
 
 class CollaborationController extends Controller
 {
     public function index(Request $request)
     {
-        // $user = $request->user();
         $user = $request->user();
-        $collaborations = Collaboration::with('produit')->where('user_id', $user->id)->get();
-        return response()->json(['collaborations' => $collaborations]);
+        $commercant = $user->commercant; // Assurez-vous que l'utilisateur a un commercant
+
+        // Collaborations envoyers (où l'utilisateur est le commerçant demandeur)
+        $sentCollaborations = Collaboration::with('produit')
+            ->where('commercant_id', $commercant->id)
+            ->get();
+
+        // Collaborations reçues (où l'utilisateur est le propriétaire du produit)
+        $receivedCollaborations = Collaboration::with(['produit' => function ($query) use ($user) {
+            $query->whereHas('commercant', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            });
+        }])->whereNotIn('id', function ($query) use ($commercant) {
+            $query->select('id')
+                  ->from('collaborations')
+                  ->where('commercant_id', $commercant->id);
+        })->get();
+
+        return response()->json([
+            'sent_collaborations' => $sentCollaborations->load('commercant'),
+            'received_collaborations' => $receivedCollaborations->load('commercant'),
+        ]);
     }
+
     public function store(Request $request)
     {
-        $data =  $request->validate([
+        $data = $request->validate([
             'produit_id' => 'required|uuid|exists:produits,id',
             'prix_revente' => 'required|numeric|min:0',
         ]);
         $user = $request->user();
-        // $produit = Produit::findOrFail($request->produit_id);
+        $commercant = $user->commercant; // Assurez-vous que l'utilisateur a un profil commerçant
         $produit = Produit::findOrFail($data['produit_id']);
-        if ($user->commercant && $user->commercant->id === $produit->commercant_id) {
+
+        if (!$commercant) {
+            return response()->json(['message' => 'Vous devez avoir un profil commerçant pour collaborer'], 422);
+        }
+        if ($commercant->id === $produit->commercant_id) {
             return response()->json(['message' => 'Vous ne pouvez pas collaborer sur votre propre produit'], 422);
         }
         if (!$produit->collaboratif) {
@@ -37,11 +61,10 @@ class CollaborationController extends Controller
         }
 
         $collaboration = Collaboration::create([
-            'id' => \Str::uuid(),
-            'user_id' => $user->id,
+            'commercant_id' => $commercant->id,
             'produit_id' => $data['produit_id'],
             'prix_revente' => $data['prix_revente'],
-            'status' => 'pending',
+            'statut' => 'en_attente',
         ]);
 
         return response()->json(['message' => 'Demande de collaboration envoyée', 'collaboration' => $collaboration]);
@@ -50,16 +73,30 @@ class CollaborationController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'statut' => 'required|in:validée,refusée',
+            'statut' => 'required|in:valider,refuser',
         ]);
 
         $collaboration = Collaboration::findOrFail($id);
         $produit = $collaboration->produit;
-        $boutique = $produit->boutique;
+        $commercant = $produit->commercant;
 
-        if ($boutique->commercant->user_id !== auth()->user->id) {
+        if ($commercant->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Accès non autorisé'], 403);
         }
+
+
+        if ($request->statut === 'valider') {
+            // Cloner le produit
+            $clonedProduit = $produit->replicate();
+            $clonedProduit->id = Str::uuid(); // ID du commerçant qui accepte
+            $clonedProduit->commercant_id = $collaboration->commercant->id; 
+
+            $clonedProduit->prix = $collaboration->prix_revente; // Nouveau prix
+            $clonedProduit->original_commercant_id = $produit->commercant_id; // ID du commerçant original
+            $clonedProduit->collaboratif = false; // Non collaboratif
+            $clonedProduit->save();
+        }
+
 
         $collaboration->statut = $request->statut;
         $collaboration->save();

@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
             ['email' => 'receiver@gmail.com'],
             [
                 // 'id' => \Illuminate\Support\Str::uuid(),
-                'nom' => 'Admin Espace',
+                'nom' => 'receiver',
                 'telephone' => '+23769000000',
                 'ville' => 'Douala',
                 'mot_de_passe' => \Illuminate\Support\Facades\Hash::make('aaaaaaaa'),

@@ -28,18 +28,28 @@ class ChatController extends Controller
 
         $conversations = Message::where('sender_id', $user->id)
             ->orWhere('receiver_id', $user->id)
-            ->select('sender_id', 'receiver_id')
-            ->groupBy('sender_id', 'receiver_id')
+            ->selectRaw('LEAST(sender_id, receiver_id) as user1, GREATEST(sender_id, receiver_id) as user2')
+            ->groupBy('user1', 'user2')
             ->get()
             ->map(function ($message) use ($user) {
-                $otherUserId = $message->sender_id === $user->id ? $message->receiver_id : $message->sender_id;
+                $otherUserId = $message->user1 == $user->id ? $message->user2 : $message->user1;
                 $otherUser = User::find($otherUserId);
+
+                // Récupérer le dernier message de la conversation
+                $lastMessage = Message::where(function ($q) use ($user, $otherUserId) {
+                    $q->where('sender_id', $user->id)->where('receiver_id', $otherUserId);
+                })->orWhere(function ($q) use ($user, $otherUserId) {
+                    $q->where('sender_id', $otherUserId)->where('receiver_id', $user->id);
+                })->latest()->first();
+
                 return [
                     'user_id' => $otherUserId,
                     'name' => $otherUser ? $otherUser->nom : 'Inconnu',
-                    'last_message' => $message->content,
-                    'updated_at' => $message->updated_at,
-                ];
+                    'last_message' => $lastMessage->content ?? '',
+                    'updated_at' => $lastMessage->updated_at ?? now(),
+                'updated_at' => $lastMessage->updated_at ?? now(),
+
+            ];
             });
 
         return response()->json(['conversations' => $conversations]);
@@ -65,7 +75,7 @@ class ChatController extends Controller
             $query->where('sender_id', $receiverId)->where('receiver_id', $user->id);
         })
             ->with('sender', 'receiver', 'product')
-            ->orderBy('id', 'asc') // Tri décroissant pour les derniers messages en premier
+            ->orderBy('id', 'desc') // Tri décroissant pour les derniers messages en premier
             ->offset($offset)
             ->limit($limit)
             ->get();
@@ -79,7 +89,7 @@ class ChatController extends Controller
      */
     public function store(Request $request, $receiverId)
     {
-        $user =$request->user();
+        $user= $request->user();
         
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
@@ -91,38 +101,33 @@ class ChatController extends Controller
         ]);
         
         // \Log::info("Événement MessageSent déclenché", ['message' => $message]);
-     
-                $message = new Message();
-                $message->sender_id = $user->id;
-                $message->receiver_id = $receiverId;
-                $message->content = $validated['content'];
-                $message->product_id = $validated['product_id']??null;
-                $message->save();
-                // broadcast(new MessageSent($message));
-                
-                // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
-        Broadcast(new MessageSent($message->load('sender', 'receiver')));
+        
+        $message = new Message();
+        $message->sender_id = $user->id;
+        $message->receiver_id = $receiverId;
+        $message->content = $validated['content'];
+        $message->product_id = $validated['product_id']??null;
+        $message->save();
+
+        try {
+            broadcast(new MessageSent($message));
+        } catch (\Exception $e) {
+            \Log::warning('Broadcast échoué : ' . $e->getMessage());
+        }
+
+        // broadcast(new MessageSent($message));
+        
+        // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
+        // Broadcast(new MessageSent($message->load('sender', 'receiver')));
         // event(new MessageSent   ("Hello depuis Laravel 🚀"));
 
         
-        // ->toOthers();
-        // return response()->json(['message' => event(new MessageSent($message))]);
-        // \Log::info('Broadcast auth request', [
-        //     'USER' => $request->user(),
-        //     'all_request' => $request->all(),
-        //     'headers' => $request->headers->all(),
-        //     'cookies' => $request->cookies->all(),
-        //     'session_id' => $request->session()->getId(),
-        //     'user_authenticated' => Auth::check(),
-        //     'user_id' => Auth::id(),
-        //     // 'broad' => Broadcast::auth(
-        //     // $request),
-        // ]);
+        
+//         return response()->json(['message' => 'Message envoyé avec succès',
+//          'message_data' =>  $validated,
+// ], 201);
         return response()->json(['message' => 'Message envoyé avec succès',
          'message_data' =>   \Auth::check(),
-        //  'message_data' =>  event(new MessageSent($message))
-         
-        //  'message_data' =>  Broadcast::auth($request)
 ], 201);
     }
 

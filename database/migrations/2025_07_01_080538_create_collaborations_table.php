@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->uuid('produit_id');
             $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignUuid('commercant_id')->references('id')->on('commercants')->onDelete('cascade');
             $table->decimal('prix_revente', 10, 2);
-            $table->enum('statut', ['en_attente', 'validée', 'refusée'])->default('en_attente');
+            $table->enum('statut', ['en_attente', 'valider', 'refuser'])->default('en_attente');
             $table->decimal('gains_totaux', 10, 2)->default(0);
             $table->timestamps();
         });

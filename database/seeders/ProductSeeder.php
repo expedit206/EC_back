@@ -17,7 +17,7 @@ class ProductSeeder extends Seeder
         $categories = Category::all();
 
         foreach ($commercants as $commercant) {
-            Produit::factory(5)->create([
+            Produit::factory(0)->create([
                 'commercant_id' => $commercant->id,
                 'category_id' => $categories->random()->id,
             ]);
