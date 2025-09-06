@@ -123,9 +123,14 @@ class UserController extends Controller
             ->where('is_read', false)
             ->count();
 
+        $conversations = $user->conversations()->withCount(['messages as unread_count' => function ($query) use ($user) {
+            $query->where('receiver_id', $user->id)->where('is_read', false);
+        }])->get();
+
         return response()->json([
             'collaborations_pending' => $collaborationsPendingCount,
             'unread_messages' => $unreadMessagesCount,
+            'conversations' => $conversations,
         ]);
     }
 

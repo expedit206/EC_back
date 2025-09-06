@@ -1,15 +1,1 @@
-bon maintenant on doit gerer completement la logique des collaborations. en fait lorsque que on affihce les
-collaboration il faut donner la possibilité d'acceder directement au profil du commercant avec qui on collabore. aussi
-du coté de celui qui recoit il doit pouvoir effectuer les actions comment valider ou rejeter la colaboration, et ainsi
-il faudra encore organiser la page des collaborations pour bien manier cela. et lorsque il valide la collaboration ça
-doit cloner le produit concerné comme etant un nouveau produit mais avec l'id du commercant qui changera et le prix, et
-on ajoutera un champ dans produit pour recuperer l'id du commercant principale du produit concerné qui sera nullable,
-car c'est uniquement lorsque le produit est en collaboration que il intervient. et les produit qui sont en collaboration
-ne peuvent plus etre collaboratif
-collaboration il faut donner la possibilité d'acceder directement au profil du commercant avec qui on collabore. aussi
-du coté de celui qui recoit il doit pouvoir effectuer les actions comment valider ou rejeter la colaboration, et ainsi
-il faudra encore organiser la page des collaborations pour bien manier cela. et lorsque il valide la collaboration ça
-doit cloner le produit concerné comme etant un nouveau produit mais avec l'id du commercant qui changera et le prix, et
-on ajoutera un champ dans produit pour recuperer l'id du commercant principale du produit concerné qui sera nullable,
-car c'est uniquement lorsque le produit est en collaboration que il intervient. et les produit qui sont en collaboration
-ne peuvent plus etre collaboratif
+parrainage, parrain_id et code parrainage

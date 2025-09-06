@@ -18,8 +18,6 @@ class ChatController extends Controller
      */
     public function conversations(Request $request)
     {
-        // return response()->json(['conversations' => '$conversations']);
-
         $user = $request->user();
 
         if (!$user) {
@@ -33,7 +31,7 @@ class ChatController extends Controller
             ->get()
             ->map(function ($message) use ($user) {
                 $otherUserId = $message->user1 == $user->id ? $message->user2 : $message->user1;
-                $otherUser = User::find($otherUserId);
+                $otherUser = User::with('commercant')->find($otherUserId);
 
                 // Récupérer le dernier message de la conversation
                 $lastMessage = Message::where(function ($q) use ($user, $otherUserId) {
@@ -42,14 +40,27 @@ class ChatController extends Controller
                     $q->where('sender_id', $otherUserId)->where('receiver_id', $user->id);
                 })->latest()->first();
 
+                // Calculer le nombre de messages non lus
+                $unreadCount = Message::where('receiver_id', $user->id)
+                    ->where('sender_id', $otherUserId)
+                    ->where('is_read', false)
+                    ->count();
+
+                // // Déterminer le lien du profil (commerçant ou utilisateur)
+                // $profileLink = $otherUser->commercant ?
+                //     route('commercant.profile', ['id' => $otherUser->commercant->id]) :
+                //     route('user.profile', ['id' => $otherUserId]);
+
                 return [
                     'user_id' => $otherUserId,
                     'name' => $otherUser ? $otherUser->nom : 'Inconnu',
                     'last_message' => $lastMessage->content ?? '',
                     'updated_at' => $lastMessage->updated_at ?? now(),
-                'updated_at' => $lastMessage->updated_at ?? now(),
-
-            ];
+                    'unread_count' => $unreadCount,
+                    // 'profile_link' => $profileLink,
+                    'is_commercant' => $otherUser->commercant ? true : false,
+                    'profile_photo' => $otherUser->photo_url ?? '/default-avatar.png', // Assurez-vous que photo_url existe dans User
+                ];
             });
 
         return response()->json(['conversations' => $conversations]);
