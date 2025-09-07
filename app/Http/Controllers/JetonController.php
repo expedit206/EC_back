@@ -27,10 +27,12 @@ class JetonController extends Controller
             'phone_number' => 'required|regex:/^6[0-9]{8}$/',
         ]);
 
+        
         $nombreJetons = $validated['nombre_jetons'];
         $paymentService = $validated['payment_service'];
         $phoneNumber = $validated['phone_number'];
         $montant = $nombreJetons * 25; // 25 FCFA par jeton
+       
 
         // Initialiser MeSomb
         $mesomb = new PaymentOperation(
@@ -66,7 +68,7 @@ class JetonController extends Controller
                 'phone_number' => $phoneNumber,
                 'transaction_id_mesomb' => $nonce,
                 'statut' => 'réussi',
-                'date_transaction' => now(),
+                'date_transaction' => now('Africa/Douala'),
             ]);
 
             // Mettre à jour le solde de jetons de l'utilisateur (à implémenter si nécessaire)
@@ -83,6 +85,8 @@ class JetonController extends Controller
                 'user_id' => $user->id,
                 'nombre_jetons' => $nombreJetons,
                 'montant' => $montant,
+                'phone_number' => $phoneNumber,
+
                 'methode_paiement' => $paymentService,
                 'transaction_id_mesomb' => null,
                 'statut' => 'échoué',

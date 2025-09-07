@@ -15,6 +15,8 @@ class Boost extends Model
         'user_id',
         'produit_id',
         'boutique_id',
+        'target_views',
+        'duration_days',
         'type',
         'start_date',
         'end_date',

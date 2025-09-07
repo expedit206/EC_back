@@ -25,6 +25,12 @@ return new class extends Migration
             $table->boolean('collaboratif')->default(false);
             $table->decimal('marge_min', 10, 2)->nullable();
             $table->timestamps();
+
+            $table->index('category_id');
+            $table->index('prix');
+            $table->index('ville');
+            $table->index('collaboratif');
+            $table->index('created_at');
         });
     }
     /**

@@ -15,6 +15,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
+
+            $table->index('views_count');
+            $table->index('favorites_count');
         });
     }
 

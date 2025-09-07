@@ -45,10 +45,10 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 // Route::get('/produits/related/{produit}', [CategoryController::class, 'relatedProduct'])->name('categories.index');
     // Routes protégées
     // Route::get('produits', [ProduitController::class, 'index']);
-    Route::post('/record_view', [ProduitController::class, 'recordView']);
     
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('produits', [ProduitController::class, 'index']);
+        Route::post('/record_view', [ProduitController::class, 'recordView']);
 
 
 

@@ -19,6 +19,7 @@ class JetonTransaction extends Model
         'nombre_jetons',
         'montant',
         'methode_paiement',
+        'phone_number',
         'transaction_id_mesomb',
         'statut',
         'date_transaction',
