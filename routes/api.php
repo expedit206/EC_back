@@ -116,6 +116,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
 Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPremium']);
 
+    Route::get('/profile/public/{id}', [ProfileController::class, 'publicProfile']);
 
     Route::post('/acheter-jetons', [JetonController::class, 'acheterJetons']);
 

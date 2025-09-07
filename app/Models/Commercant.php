@@ -44,6 +44,6 @@ class Commercant extends Model
 
     public function getAverageRatingAttribute()
     {
-        return $this->ratings()->avg('rapiating') ?? 0;
+        return $this->ratings()->avg('rating') ?? 0;
     }
 }

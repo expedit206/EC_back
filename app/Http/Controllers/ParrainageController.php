@@ -23,39 +23,45 @@ class ParrainageController extends Controller
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        $parrainages = User::where('parrain_id', $user->id)->with('commercant')->get()->map(function ($filleul) {
+        // Récupérer tous les filleuls (commerçants et non-commerçants)
+        $allParrainages = User::where('parrain_id', $user->id)->with('commercant')->get()->map(function ($filleul) {
             return [
                 'filleul_nom' => $filleul->nom,
                 'date_inscription' => $filleul->created_at,
                 'est_commercant' => $filleul->commercant ? true : false,
+                'id' => $filleul->commercant ? $filleul->commercant->id : $filleul->id,
             ];
         });
+
+        // Calculer le nombre total de filleuls (commerçants et non-commerçants)
+        $totalParrainages = $allParrainages->count();
+
+        // Filtrer les commerçants pour les niveaux et la progression
+        $parrainagesCommercants = $allParrainages->filter(function ($filleul) {
+            return $filleul['est_commercant'];
+        });
+
+        $totalParrainagesCommercants = $parrainagesCommercants->count();
         $totalGains = $this->calculateTotalGains($user->id);
-        $totalParrainages = $parrainages->count();
 
-        // Récupérer les niveaux et déterminer le niveau actuel
+        // Récupérer les niveaux et déterminer le niveau actuel basé sur les commerçants
         $niveaux = ParrainageNiveau::orderBy('filleuls_requis')->get();
-        $niveauActuel = $niveaux->Where('filleuls_requis', '<=', $totalParrainages)->last() ?? $niveaux->first();
-        $niveauSuivant = $niveaux->firstWhere('filleuls_requis', '>', $totalParrainages) ?? $niveaux->last();
+        $niveauActuel = $niveaux->where('filleuls_requis', '<=', $totalParrainagesCommercants)->last() ?? $niveaux->first();
+        $niveauSuivant = $niveaux->firstWhere('filleuls_requis', '>', $totalParrainagesCommercants) ?? $niveaux->last();
 
-        // $progression = $niveauSuivant ;
-        // > 0 && $niveauSuivant
-        //     ? (($totalParrainages - $niveauActuel->filleuls_requis) / ($niveauSuivant->filleuls_requis - $niveauActuel->filleuls_requis)) * 100
-        //     : 0;
-        // return response()->json(['message' => 
-        // ($totalParrainages - $niveauActuel->filleuls_requis)/
-        //   ($niveauSuivant
-        //   ->filleuls_requis - $niveauActuel->filleuls_requis)
-        // ]);
-        $progression = $totalParrainages > 0 && $niveauSuivant
-            ? (($totalParrainages - $niveauActuel->filleuls_requis) / ($niveauSuivant->filleuls_requis - $niveauActuel->filleuls_requis)) * 100
+        $progression = $totalParrainagesCommercants > 0 && $niveauSuivant
+            ? (($totalParrainagesCommercants) / ($niveauSuivant->filleuls_requis)) * 100
             : 0;
+        // $progression = $totalParrainagesCommercants > 0 && $niveauSuivant
+        //     ? (($totalParrainagesCommercants - $niveauActuel->filleuls_requis) / ($niveauSuivant->filleuls_requis - $niveauActuel->filleuls_requis)) * 100
+        //     : 0;
 
         return response()->json([
             'code' => $user->parrainage_code,
-            'parrainages' => $parrainages,
+            'parrainages' => $allParrainages, // Tous les filleuls (commerçants et non-commerçants)
             'total_gains' => $totalGains,
-            'total_parrainages' => $totalParrainages,
+            'total_parrainages' => $totalParrainages, // Nombre total de filleuls
+            'total_parrainages_commercants' => $totalParrainagesCommercants, // Nombre de commerçants pour les niveaux
             'niveau_actuel' => [
                 'id' => $niveauActuel->id,
                 'nom' => $niveauActuel->nom,
@@ -68,6 +74,8 @@ class ParrainageController extends Controller
             'niveau_suivant' => $niveauSuivant ? [
                 'id' => $niveauSuivant->id,
                 'nom' => $niveauSuivant->nom,
+                'jetons_bonus' => $niveauSuivant->jetons_bonus,
+
                 'filleuls_requis' => $niveauSuivant->filleuls_requis,
             ] : null,
             'progression' => min($progression, 100), // Limiter à 100%
@@ -149,7 +157,22 @@ class ParrainageController extends Controller
      */
     protected function calculateTotalGains($userId)
     {
-        $commercantsParraines = User::where('parrain_id', $userId)->whereHas('commercant')->get();
-        return $commercantsParraines->count(); // 1 jeton (500 FCFA) par commerçant actif
+        // Récupérer le nombre de commerçants parrainés
+        $totalParrainagesCommercants = User::where('parrain_id', $userId)->whereHas('commercant')->count();
+
+        // Récupérer tous les niveaux ordonnés par filleuls_requis
+        $niveaux = ParrainageNiveau::orderBy('filleuls_requis')->get();
+
+        // Calculer les gains cumulatifs jusqu'au niveau atteint
+        $totalGains = 0;
+        foreach ($niveaux as $niveau) {
+            if ($niveau->filleuls_requis <= $totalParrainagesCommercants) {
+                $totalGains += $niveau->jetons_bonus;
+            } else {
+                break; // Arrêter dès qu'on dépasse le nombre de commerçants
+            }
+        }
+
+        return $totalGains;
     }
 }

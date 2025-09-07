@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Message;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Collaboration;
 use Illuminate\Support\Facades\Auth;
@@ -21,8 +22,17 @@ class UserController extends Controller
             'email' => 'nullable|email|max:255|unique:users,email',
             'ville' => 'required|string|max:255',
             'mot_de_passe' => 'required|string|min:8',
-            'parrain_id' => 'nullable|exists:users,id',
+            'parrain_code' => 'nullable|string|max:50|exists:users,parrainage_code', // Nouveau champ
         ]);
+
+        // Récupérer l'ID du parrain à partir du code de parrainage
+        $parrainId = null;
+        if ($request->parrain_code) {
+            $parrain = User::where('parrainage_code', $request->parrain_code)->first();
+            if ($parrain) {
+                $parrainId = $parrain->id;
+            }
+        }
 
         $user = User::create([
             'nom' => $request->nom,
@@ -31,8 +41,12 @@ class UserController extends Controller
             'ville' => $request->ville,
             'mot_de_passe' => Hash::make($request->mot_de_passe),
             'premium' => false,
-            'parrain_id' => $request->parrain_id,
+            'parrain_id' => $parrainId, // Utilise l'ID du parrain trouvé
         ]);
+
+        // Générer un code de parrainage unique pour le nouvel utilisateur
+      
+        $user->save();
 
         // Générer un token API pour Bearer Auth
         $token = $user->createToken('auth_token')->plainTextToken;

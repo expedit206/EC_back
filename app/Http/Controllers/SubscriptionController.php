@@ -55,8 +55,10 @@ class SubscriptionController extends Controller
 
         if ($response->isOperationSuccess()) {
 
+
+            $user->jetons +=20;
             PremiumTransaction::create([
-                'id' => \Str::uuid(),
+                // 'id' => \Str::uuid(),
                 'user_id' => $user->id,
                 'type_abonnement' => $typeAbonnement,
                 'montant' => $amount,
@@ -69,7 +71,7 @@ class SubscriptionController extends Controller
         } else {
 
             PremiumTransaction::create([
-                'id' => \Str::uuid(),
+                // 'id' => \Str::uuid(),
                 'user_id' => $user->id,
                 'type_abonnement' => $typeAbonnement,
                 'montant' => $amount,

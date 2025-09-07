@@ -69,7 +69,7 @@ class User extends Authenticatable
 
     public function jetonsTransactions()
     {
-        return $this->hasMany(JetonsTransaction::class);
+        return $this->hasMany(JetonTransaction::class);
     }
 
     public function boosts()

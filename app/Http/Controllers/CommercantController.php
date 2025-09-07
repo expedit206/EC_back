@@ -51,6 +51,8 @@ class CommercantController extends Controller
             'ville' => 'nullable|string',
         ]);
 
+        // return response()->json(['produit' => $validated], 201);
+
         $photos = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
@@ -68,7 +70,7 @@ class CommercantController extends Controller
             'prix' => $validated['prix'],
             'photos' => $photos, // Stocker les URLs en JSON
             // 'photos' => json_encode($photos), // Stocker les URLs en JSON
-            'collaboratif' => $validated['collaboratif'] == 'false' ? 0 : 1,
+            'collaboratif' => $validated['collaboratif'] == '0' ? 0 : 1,
             'marge_min' => $validated['marge_min'] ?? null,
             'quantite' => $validated['stock'],
             'ville' => $validated['ville'] ?? 'aucun',
@@ -152,7 +154,7 @@ class CommercantController extends Controller
     {
         $request->user()->load('commercant',);
         $commercant = $request->user()->commercant;
-        return response()->json(['commercant' => $commercant]);
+        return response()->json(['commercant' => '$commercant']);
     }
 
     public function show($id)

@@ -133,6 +133,8 @@ class ProduitController extends Controller
                 // Redis::incr("produit:views:{$id}");
             }
         }
+        $produit->commercant->rating = $produit->commercant->average_rating; // Utilise l'attribut calculé
+
 
         $produit->boosted_until = $produit->boosts->first()?->end_date;
 
@@ -247,9 +249,12 @@ class ProduitController extends Controller
             'category_id' => 'nullable|uuid|exists:categories,id',
             'ville' => 'nullable|string',
             'photo_url' => 'nullable|string',
-            'collaboratif' => 'boolean',
+            'collaboratif' => 'string',
             'marge_min' => 'nullable|numeric|min:0',
         ]);
+
+
+        // return response()->json(['message' => 'Produit créé', 'produit' => $request->all()], 201);
 
         $user = $request->user();
         $commercant = Commercant::where('user_id', $user->id)->first();
@@ -268,7 +273,7 @@ class ProduitController extends Controller
             'category_id' => $request->category_id,
             'ville' => $request->ville,
             'photo_url' => $request->photo_url,
-            'collaboratif' => $request->collaboratif ?? false,
+            'collaboratif' => $request->collaboratif,
             'marge_min' => $request->marge_min,
         ]);
         $produit->save();
