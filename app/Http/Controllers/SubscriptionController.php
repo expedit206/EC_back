@@ -70,6 +70,7 @@ class SubscriptionController extends Controller
             // return response()->json(['message' => 'reussi du paiement'], 200);
         } else {
 
+            
             PremiumTransaction::create([
                 // 'id' => \Str::uuid(),
                 'user_id' => $user->id,
