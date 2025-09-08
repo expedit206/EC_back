@@ -58,6 +58,10 @@ return [
                 'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'curl_options' => [
+                    CURLOPT_CONNECTTIMEOUT => 30, // Augmenter de 15 à 30 secondes
+                    CURLOPT_TIMEOUT => 30,
+                ],
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html

@@ -46,24 +46,21 @@ class ChatController extends Controller
                     ->where('is_read', false)
                     ->count();
 
-                // // Déterminer le lien du profil (commerçant ou utilisateur)
-                // $profileLink = $otherUser->commercant ?
-                //     route('commercant.profile', ['id' => $otherUser->commercant->id]) :
-                //     route('user.profile', ['id' => $otherUserId]);
-
                 return [
                     'user_id' => $otherUserId,
                     'name' => $otherUser ? $otherUser->nom : 'Inconnu',
                     'last_message' => $lastMessage->content ?? '',
                     'updated_at' => $lastMessage->updated_at ?? now(),
                     'unread_count' => $unreadCount,
-                    // 'profile_link' => $profileLink,
                     'is_commercant' => $otherUser->commercant ? true : false,
-                    'profile_photo' => $otherUser->photo_url ?? '/default-avatar.png', // Assurez-vous que photo_url existe dans User
+                    'profile_photo' => $otherUser->photo, // Assurez-vous que photo_url existe dans User
                 ];
+            })
+            ->sortByDesc(function ($conversation) {
+                return $conversation['updated_at'];
             });
 
-        return response()->json(['conversations' => $conversations]);
+        return response()->json(['conversations' => $conversations->values()]);
     }
 
     /**
@@ -111,7 +108,6 @@ class ChatController extends Controller
             'product_id' => 'nullable|exists:produits,id',
         ]);
         
-        // \Log::info("Événement MessageSent déclenché", ['message' => $message]);
         
         $message = new Message();
         $message->sender_id = $user->id;
@@ -119,9 +115,12 @@ class ChatController extends Controller
         $message->content = $validated['content'];
         $message->product_id = $validated['product_id']??null;
         $message->save();
-
+        
         try {
-            broadcast(new MessageSent($message));
+            // event(new MessageSent($message));
+            // broadcast(new MessageSent($message));
+            Broadcast(new MessageSent($message->load('sender', 'receiver')));
+            \Log::info("Événement MessageSent déclenché", ['message' => $message]);
         } catch (\Exception $e) {
             \Log::warning('Broadcast échoué : ' . $e->getMessage());
         }
@@ -129,8 +128,6 @@ class ChatController extends Controller
         // broadcast(new MessageSent($message));
         
         // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
-        // Broadcast(new MessageSent($message->load('sender', 'receiver')));
-        // event(new MessageSent   ("Hello depuis Laravel 🚀"));
 
         
         
