@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\ParrainageNiveau;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
@@ -93,6 +94,34 @@ class ProfileController extends Controller
         return $gains;
     }
 
+    public function updatePassword(Request $request)
+    {
+        // Validation des champs
+        
+        
+        $request->validate([
+            'current_password' => 'required',
+            'new_password'     => 'required|min:8',
+        ]);
+
+        $user = $request->user(); // Récupération directe de l'utilisateur connecté
+
+        // Vérifier que l'ancien mot de passe est correct
+        if (!Hash::check($request->current_password, $user->mot_de_passe)) {
+          
+            return response()->json(['message'=> 'Le mot de passe actuel est incorrect.'], 404);
+            // return response()->json('current_password' , 'Le mot de passe actuel est incorrect.');
+        }
+
+        // Mettre à jour le mot de passe
+        $user->update([
+            'mot_de_passe' => \Hash::make($request->new_password),
+        ]);
+        return response()->json(['success'=> 'Mot de passe modifié avec succès !']);
+
+
+    }
+    
     public function updateProfilePhoto(Request $request)
     {
         $user = $request->user();
@@ -133,6 +162,17 @@ class ProfileController extends Controller
             'telephone' => $user->telephone,
             'niveaux_users' => $user->niveaux_users,
         ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+
+        $user = $request->user();
+$user->update($request->all());
+      return response()->json([
+            'user' => $user->load('commercant')
+        ], 200);
+  
     }
     // protected function calculateTotalGains($userId)
     // {

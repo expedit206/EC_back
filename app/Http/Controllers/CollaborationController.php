@@ -15,6 +15,9 @@ class CollaborationController extends Controller
         $user = $request->user();
         $commercant = $user->commercant; // Assurez-vous que l'utilisateur a un commercant
 
+        // return response()->json([
+        //     'sent_collaborations' =>'commercant',
+        // ]);
         // Collaborations envoyers (où l'utilisateur est le commerçant demandeur)
         $sentCollaborations = Collaboration::with('produit')
             ->where('commercant_id', $commercant->id)

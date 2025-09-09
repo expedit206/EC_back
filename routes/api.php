@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\CommercantController;
+use App\Http\Controllers\JetonMarketController;
 
 Route::get('/redis-test', function () {
     Redis::set('test_key', 'Hello Redis!');
@@ -59,6 +60,7 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('user', [UserController::class, 'profile']);
 
     Route::post('/profile/photo', [ProfileController::class, 'updateProfilePhoto']); // Nouvelle route
+    Route::post('/updatePassword', [ProfileController::class, 'updatePassword']); // Nouvelle route
     Route::post('logout', [UserController::class, 'logout']);
 
 
@@ -117,8 +119,13 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPremium']);
 
     Route::get('/profile/public/{id}', [ProfileController::class, 'publicProfile']);
+    Route::post('/updateProfile', [ProfileController::class, 'updateProfile']);
 
     Route::post('/acheter-jetons', [JetonController::class, 'acheterJetons']);
 
     Route::get('/jeton-transactions/{userId}', [JetonController::class, 'getUserTransactions']);
+
+    Route::get('/jeton_market/offers', [JetonMarketController::class, 'index']);
+    Route::post('/jeton_market/offer', [JetonMarketController::class, 'store']);
+    Route::post('/jeton_market/buy/{offer_id}', [JetonMarketController::class, 'buy']);
 });
