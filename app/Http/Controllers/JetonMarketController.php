@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Wallet;
 use App\Models\JetonOffer;
 use App\Models\JetonTrade;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class JetonMarketController extends Controller
     
     public function index(Request $request)
 {
-    $query = JetonOffer::with('user'); // Charger les détails de l'utilisateur (vendeur)
+    $query = JetonOffer::with('user.commercant')->where('statut', 'disponible')->with('user'); // Charger les détails de l'utilisateur (vendeur)
 
     // Appliquer le filtre sur la quantité si présent
     if ($request->has('quantity_min')) {
@@ -28,14 +29,13 @@ class JetonMarketController extends Controller
     $page = $request->input('page', 1); // Page par défaut = 1
     $offers = $query->inRandomOrder()->paginate($perPage, ['*'], 'page', $page);
 
-    return response()->json([
+    return response()->json([   
         'data' => $offers->items(),
         'current_page' => $offers->currentPage(),
         'last_page' => $offers->lastPage(),
         'total' => $offers->total(),
     ], 200);
 }
-
 
     public function buy($offer_id, Request $request)
     {
@@ -45,10 +45,10 @@ class JetonMarketController extends Controller
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        // Valider et récupérer l'offre
-        $offer = JetonOffer::with('user')->findOrFail($offer_id);
+        // Valider et récupérer l'offre avec le portefeuille du vendeur
+        $offer = JetonOffer::with(['user', 'wallet'])->findOrFail($offer_id);
 
-        if ($offer?->nombre_jetons <= 0) {
+        if ($offer->nombre_jetons <= 0) {
             return response()->json(['message' => 'Offre épuisée'], 400);
         }
 
@@ -57,31 +57,45 @@ class JetonMarketController extends Controller
         $commission = $montantTotal * 0.05; // 5% de commission
         $montantNet = $montantTotal - $commission; // Montant net pour le vendeur
 
-        // Validation des données de paiement
+        // Validation des données de paiement (utilisation d'un wallet_id)
         $validated = $request->validate([
-            'payment_service' => 'required|in:ORANGE,MTN',
-            'phone_number' => 'required|regex:/^6[0-9]{8}$/', // 9 chiffres commençant par 6
+            'wallet_id' => 'required|exists:wallets,id',
         ]);
 
-        $paymentService = $validated['payment_service'];
-        $phoneNumber = $validated['phone_number'];
-
-        // Initialisation de MeSomb
-        $mesomb = new PaymentOperation(
-            env('MESOMB_APPLICATION_KEY'),
-            env('MESOMB_ACCESS_KEY'),
-            env('MESOMB_SECRET_KEY')
-        );
+        // Récupérer le portefeuille de l'acheteur
+        $walletAcheteur = Wallet::where('id', $validated['wallet_id'])
+            ->where('user_id', $acheteur->id)
+            ->firstOrFail();
+            
+            
+            $paymentService = $walletAcheteur->payment_service;
+            $phoneNumber = $walletAcheteur->phone_number;
+            
+            // Initialisation de MeSomb
+            $mesomb = new PaymentOperation(
+                env('MESOMB_APPLICATION_KEY'),
+                env('MESOMB_ACCESS_KEY'),
+                env('MESOMB_SECRET_KEY')
+            );
+            
 
         $nonce = RandomGenerator::nonce();
 
         // Collecter le paiement auprès de l'acheteur (montant total incluant la commission)
+        // return response()->json(['message' => [
+        //     'amount' => $montantTotal,
+        //     'service' => $paymentService,
+        //     'payer' => $phoneNumber,
+        //     'nonce' => $nonce,
+        // ]], 400);
         $paymentResponse = $mesomb->makeCollect([
             'amount' => $montantTotal,
             'service' => $paymentService,
             'payer' => $phoneNumber,
             'nonce' => $nonce,
         ]);
+
+
 
         if (!$paymentResponse->isOperationSuccess()) {
             // Enregistrer l'échec de la transaction
@@ -100,15 +114,15 @@ class JetonMarketController extends Controller
                 'date_transaction' => now(),
             ]);
 
-            return response()->json(['message' => 'Échec du paiement : verifiez vos informations  ' ], 400);
+            return response()->json(['message' => 'Échec du paiement : vérifiez vos informations'], 400);
         }
 
-        // Transférer le montant net au vendeur (après déduction de la commission)
+        // Transférer le montant net au vendeur (après déduction de la commission) via son portefeuille
         $depositNonce = RandomGenerator::nonce();
         $depositResponse = $mesomb->makeDeposit([
             'amount' => $montantNet,
-            'service' => $paymentService,
-            'recipient' => $offer->user->phone_number,
+            'service' => $offer->wallet->paymenservice,
+            'recipient' => $offer->wallet->phone_number,
             'nonce' => $depositNonce,
         ]);
 
@@ -129,7 +143,7 @@ class JetonMarketController extends Controller
                 'date_transaction' => now(),
             ]);
 
-            return response()->json(['message' => 'Échec du transfert au vendeur : verifiez vos informations'], 400);
+            return response()->json(['message' => 'Échec du transfert au vendeur : vérifiez vos informations'], 400);
         }
 
         // Enregistrer la transaction réussie
@@ -153,37 +167,10 @@ class JetonMarketController extends Controller
         // Le vendeur reçoit l'argent via MeSomb, pas besoin d'ajuster ses jetons ici
 
         // Supprimer l'offre
-        $offer->delete();
-
+        $offer->statut('vendu');
+$offer->save();
         return response()->json(['message' => 'Achat réussi', 'trade' => $trade], 200);
     }
 
-    public function store(Request $request)
-    {
-        $user = auth()->user();
-        $request->validate([
-            'nombre_jetons' => 'required|integer|min:1',
-            'prix_unitaire' => 'required|numeric|min:0.01',
-        ]);
-
-        $totalPrix = $request->nombre_jetons * $request->prix_unitaire;
-
-        // Vérifier le solde de jetons (à implémenter avec une table jeton_balances ou logique existante)
-        if ($user->jetons < $request->nombre_jetons) {
-            return response()->json(['message' => 'jetons insuffisants'], 400);
-        }
-
-        $offer = JetonOffer::create([
-            'user_id' => $user->id,
-            'nombre_jetons' => $request->nombre_jetons,
-            'prix_unitaire' => $request->prix_unitaire,
-            'total_prix' => $totalPrix,
-        ]);
-
-        // Bloquer les jetons (logique à ajouter)
-        $user->update(['jetons' => $user->jetons - $request->nombre_jetons]);
-
-        return response()->json(['message' => 'Offre créée avec succès', 'offer' => $offer], 201);
-    }
-    
+   
 }

@@ -9,12 +9,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\JetonController;
 use App\Http\Controllers\StatsController;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\CommercantController;
-use App\Http\Controllers\JetonMarketController;
 
 Route::get('/redis-test', function () {
     Redis::set('test_key', 'Hello Redis!');
@@ -27,10 +27,12 @@ Route::get('/redis-test', function () {
     // Authentification
     // Route::post('register', [UserController::class, 'register']);
 use App\Http\Controllers\ParrainageController;
-use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\JetonMarketController;
 
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Broadcasting\BroadcastController;
 use App\Http\Controllers\CollaborationController;
+use App\Http\Controllers\OfferController;
 
 Route::post('/login', [UserController::class, 'login']);
 Route::post('register', [UserController::class, 'register']);
@@ -126,6 +128,20 @@ Route::post('/upgrade-to-premium', [SubscriptionController::class, 'upgradeToPre
     Route::get('/jeton-transactions/{userId}', [JetonController::class, 'getUserTransactions']);
 
     Route::get('/jeton_market/offers', [JetonMarketController::class, 'index']);
-    Route::post('/jeton_market/offer', [JetonMarketController::class, 'store']);
     Route::post('/jeton_market/buy/{offer_id}', [JetonMarketController::class, 'buy']);
+    
+    
+
+
+    Route::get('/wallets', [WalletController::class, 'index']);
+    Route::post('/wallets', [WalletController::class, 'store']);
+    Route::put('/wallets/{id}', [WalletController::class, 'update']);
+    Route::delete('/wallets/{id}', [WalletController::class, 'destroy']);
+    
+    Route::post('/jeton_market/offer', [OfferController::class, 'store']);
+    Route::get('/jeton_market/my-offers', [OfferController::class, 'myOffers']);
+    Route::put('/jeton_market/updateOffer/{id}', [OfferController::class, 'updateOffer']);
+    
+    Route::delete('/jeton_market/deleteOffer/{id}', [OfferController::class, 'destroyOffer']);
+    
 });
