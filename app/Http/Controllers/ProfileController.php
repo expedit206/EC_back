@@ -122,26 +122,56 @@ class ProfileController extends Controller
 
     }
     
+    // public function updateProfilePhoto(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     $request->validate([
+    //         'photo' => 'required|image|max:2048', // Limite à 2 Mo et accepte uniquement les images
+    //     ]);
+
+    //     // Supprimer l'ancienne photo si elle existe
+    //     if ($user->photo) {
+    //         Storage::disk('public')->delete($user->photo);
+    //     }
+
+    //     // Stocker la nouvelle photo
+    //     $photoPath = $request->file('photo')->store('profile_photos', 'public');
+    //     $user->update(['photo' => $photoPath]);
+
+    //     return response()->json([
+    //         'message' => 'Photo de profil mise à jour avec succès.',
+    //         'photo' => $photoPath,
+    //     ], 200);
+    // }
+
+
     public function updateProfilePhoto(Request $request)
     {
         $user = $request->user();
 
         $request->validate([
-            'photo' => 'required|image|max:2048', // Limite à 2 Mo et accepte uniquement les images
+            'photo' => 'required|image|max:2048', // Limite à 2 Mo
         ]);
 
-        // Supprimer l'ancienne photo si elle existe
-        if ($user->photo) {
-            Storage::disk('public')->delete($user->photo);
+      
+        if ($user->photo && file_exists(public_path('storage/'.$user->photo))) {
+        
+            unlink(public_path('storage/'.$user->photo));
         }
 
-        // Stocker la nouvelle photo
-        $photoPath = $request->file('photo')->store('profile_photos', 'public');
+        // Déplacer la nouvelle photo dans /public/uploads/profile_photos
+        $file = $request->file('photo');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('storage/profile_photos'), $filename);
+
+        // Enregistrer le chemin relatif en BDD (ex: "uploads/profile_photos/xxxx.jpg")
+        $photoPath =  'profile_photos/' . $filename;
         $user->update(['photo' => $photoPath]);
 
         return response()->json([
             'message' => 'Photo de profil mise à jour avec succès.',
-            'photo' => $photoPath,
+            'photo' => $photoPath, // URL complète pour l’affichage
         ], 200);
     }
 

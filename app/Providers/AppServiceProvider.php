@@ -24,6 +24,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        $storagePath = storage_path('app/public');
+        $publicPath = public_path('storage');
+
+        if (!file_exists($publicPath)) {
+            @mkdir($publicPath, 0777, true);
+        }
+
+        // Copie les fichiers manuellement au boot
+        foreach (glob($storagePath . '/*') as $file) {
+            $fileName = basename($file);
+            @copy($file, $publicPath . '/' . $fileName);
+        }
         // Produit::observe(ProduitObserver::class);
         }
 }

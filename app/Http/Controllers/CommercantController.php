@@ -80,19 +80,131 @@ class CommercantController extends Controller
     }
 
     // Pour la mise à jour
+    // public function updateProduit(Request $request, $id)
+    // {
+    //     // Récupérer l'utilisateur authentifié
+    //     $user = $request->user();
+    //     $produit = Produit::where('commercant_id', $user->commercant->id)->findOrFail($id);
+
+    //     // Validation des données
+    //     $validated = $request->validate([
+    //         'nom' => 'required|string|max:255',
+    //         'description' => 'nullable|string',
+    //         'prix' => 'required|numeric|min:0',
+    //         'photos' => 'nullable|array',
+    //         'photos.*' => 'image|max:2048',
+    //         'category_id' => 'required|exists:categories,id',
+    //         'collaboratif' => 'boolean',
+    //         'marge_min' => 'nullable|numeric|min:0',
+    //         'stock' => 'required|integer|min:0',
+    //         'ville' => 'nullable|string',
+    //     ]);
+
+    //     // Gérer les anciennes photos (suppression)
+    //     $oldPhotos = $produit->photos ?? [];
+    //     if (!empty($oldPhotos) && is_array($oldPhotos)) {
+    //         foreach ($oldPhotos as $oldPhoto) {
+    //             // Extraire le chemin relatif à partir de l'URL (ex. : /storage/produits/filename.png -> produits/filename.png)
+    //             $path = parse_url($oldPhoto, PHP_URL_PATH);
+    //             $relativePath = str_replace('/storage/', '', $path); // Récupère uniquement le chemin relatif (ex. : produits/filename.png)
+    //             if (Storage::disk('public')->exists($relativePath)) {
+    //                 Storage::disk('public')->delete($relativePath);
+    //             }
+    //         }
+    //     }
+
+    //     // Gérer les nouvelles photos
+    //     $photos = [];
+    //     if ($request->hasFile('photos')) {
+    //         foreach ($request->file('photos') as $photo) {
+    //             $photoPath = $photo->store('produits', 'public');
+    //             $photos[] = asset('storage/' . $photoPath); // Stocker l'URL complète
+    //         }
+    //     } else {
+    //         // Si aucune nouvelle photo n'est uploadée, conserver les anciennes (si aucune suppression n'est demandée)
+    //         $photos = $oldPhotos;
+    //     }
+
+    //     // Mettre à jour le produit
+    //     $produit->update([
+    //         'nom' => $validated['nom'],
+    //         'description' => $validated['description'],
+    //         'prix' => $validated['prix'],
+    //         'photos' => $photos,
+    //         'category_id' => $validated['category_id'],
+    //         'collaboratif' => $validated['collaboratif'] ?? false,
+    //         'marge_min' => $validated['marge_min'] ?? null,
+    //         'quantite' => $validated['stock'],
+    //         'ville' => $validated['ville'] ?? 'aucun',
+    //     ]);
+
+    //     return response()->json(['produit' => $produit], 200);
+    // }
+
+
+    // public function storeProduit(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     if (!$user->commercant) {
+    //         return response()->json(['message' => 'Accès refusé.'], 403);
+    //     }
+
+    //     $validated = $request->validate([
+    //         'nom' => 'required|string|max:255',
+    //         'description' => 'nullable|string',
+    //         'prix' => 'required|numeric|min:0',
+    //         'photos' => 'nullable|array',
+    //         'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048', // formats sécurisés
+    //         'category_id' => 'required|exists:categories,id',
+    //         'collaboratif' => 'required|boolean',
+    //         'marge_min' => 'nullable|numeric|min:0',
+    //         'stock' => 'required|integer|min:0',
+    //         'ville' => 'nullable|string',
+    //     ]);
+
+    //     $photos = [];
+    //     if ($request->hasFile('photos')) {
+    //         foreach ($request->file('photos') as $photo) {
+    //             $filename = time() . '_' . $photo->getClientOriginalName();
+    //             $photo->move(public_path('storage/produits'), $filename);
+
+    //             // chemin relatif pour la BDD
+    //             $photos[] = asset('storage/produits' . $filename);
+    //         }
+    //     }
+
+    //     $produit = Produit::create([
+    //         'id' => \Illuminate\Support\Str::uuid(),
+    //         'commercant_id' => $user->commercant->id,
+    //         'category_id' => $validated['category_id'],
+    //         'nom' => $validated['nom'],
+    //         'description' => $validated['description'],
+    //         'prix' => $validated['prix'],
+    //         'photos' => $photos, // Laravel cast JSON si la colonne est castée
+    //         'collaboratif' => $validated['collaboratif'],
+    //         'marge_min' => $validated['marge_min'] ?? null,
+    //         'quantite' => $validated['stock'],
+    //         'ville' => $validated['ville'] ?? 'aucun',
+    //     ]);
+
+    //     return response()->json(['produit' => $produit], 201);
+    // }
+
+
     public function updateProduit(Request $request, $id)
     {
-        // Récupérer l'utilisateur authentifié
         $user = $request->user();
         $produit = Produit::where('commercant_id', $user->commercant->id)->findOrFail($id);
 
-        // Validation des données
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
             'photos' => 'nullable|array',
-            'photos.*' => 'image|max:2048',
+            'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
+            'old_photos' => 'nullable|array',
+            'old_photos.*' => 'string',
             'category_id' => 'required|exists:categories,id',
             'collaboratif' => 'boolean',
             'marge_min' => 'nullable|numeric|min:0',
@@ -100,32 +212,34 @@ class CommercantController extends Controller
             'ville' => 'nullable|string',
         ]);
 
-        // Gérer les anciennes photos (suppression)
-        $oldPhotos = $produit->photos ?? [];
-        if (!empty($oldPhotos) && is_array($oldPhotos)) {
-            foreach ($oldPhotos as $oldPhoto) {
-                // Extraire le chemin relatif à partir de l'URL (ex. : /storage/produits/filename.png -> produits/filename.png)
-                $path = parse_url($oldPhoto, PHP_URL_PATH);
-                $relativePath = str_replace('/storage/', '', $path); // Récupère uniquement le chemin relatif (ex. : produits/filename.png)
-                if (Storage::disk('public')->exists($relativePath)) {
-                    Storage::disk('public')->delete($relativePath);
+        // Photos gardées par l’utilisateur
+        $oldPhotos = $validated['old_photos'] ?? [];
+
+        // Anciennes photos en BDD
+        $existingPhotos = $produit->photos ?? [];
+
+        // Supprimer celles qui ne sont plus dans old_photos
+        foreach ($existingPhotos as $oldPhoto) {
+            if (!in_array($oldPhoto, $oldPhotos)) {
+                $path = public_path(str_replace(asset(''), '', $oldPhoto));
+                if (file_exists($path)) {
+                    unlink($path);
                 }
             }
         }
 
-        // Gérer les nouvelles photos
-        $photos = [];
+        // Ajouter les nouvelles
+        $photos = $oldPhotos; // on garde celles restantes
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $photoPath = $photo->store('produits', 'public');
-                $photos[] = asset('storage/' . $photoPath); // Stocker l'URL complète
+                $filename = time() . '_' . $photo->getClientOriginalName();
+                $photo->move(public_path('storage/produits'), $filename);
+
+                $photos[] = asset('storage/produits/' . $filename);
             }
-        } else {
-            // Si aucune nouvelle photo n'est uploadée, conserver les anciennes (si aucune suppression n'est demandée)
-            $photos = $oldPhotos;
         }
 
-        // Mettre à jour le produit
+        // Mise à jour
         $produit->update([
             'nom' => $validated['nom'],
             'description' => $validated['description'],
@@ -140,6 +254,7 @@ class CommercantController extends Controller
 
         return response()->json(['produit' => $produit], 200);
     }
+
 
     public function destroyProduit(Produit $produit, Request $request)
     {
@@ -323,10 +438,12 @@ class CommercantController extends Controller
 
             // Mettre à jour les jetons totaux
             $parrain->increment('jetons', $niveau->jetons_bonus);
-            $parrain->save();
         } else {
             $niveau_actuel->update(['nombre_filleuls_actuels' => $filleuls_commercants]);
         }
+        $parrain->jetons+=1;
+        $parrain->save();
+        
     }
 
     private function determinerNiveau($filleuls_commercants)
