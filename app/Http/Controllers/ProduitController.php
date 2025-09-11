@@ -21,8 +21,11 @@ class ProduitController extends Controller
 {
 public function index(Request $request)
     {
-        $user = $request->user(); // Disponible grâce au middleware
 
+
+        
+        $user = \Auth::user(); // Disponible grâce au middleware
+        
         $sort = $request->query('sort', 'default');
         $perPage = $request->query('per_page', 10) === 'all' ? null : (int)$request->query('per_page', 10);
         $search = $request->query('search');
@@ -31,6 +34,7 @@ public function index(Request $request)
         $prixMax = $request->query('prix_max');
         $ville = $request->query('ville');
         $collaboratif = filter_var($request->query('collaboratif'), FILTER_VALIDATE_BOOLEAN, ['default' => null]);
+        // return response()->json($collaboratif);
         $page = (int)$request->query('page', 1);
 
         $query = Produit::query()
@@ -56,7 +60,9 @@ public function index(Request $request)
         if ($prixMin) $query->where('prix', '>=', (float)$prixMin);
         if ($prixMax) $query->where('prix', '<=', (float)$prixMax);
         if ($ville) $query->where('ville', $ville);
-        if ($collaboratif !== null) $query->where('collaboratif', $collaboratif);
+
+        if($request->collaboratif) $query->where('collaboratif', $collaboratif);
+        
 
         // Calculer le score dynamisé
         $query->select('produits.*')
