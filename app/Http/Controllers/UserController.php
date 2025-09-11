@@ -158,9 +158,9 @@ class UserController extends Controller
         }
 
         $user->load('commercant', 'niveaux_users.parrainageNiveau');
-
         return response()->json([
             'user' => $user,
         ]);
+
     }
 }
