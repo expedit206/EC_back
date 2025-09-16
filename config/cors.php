@@ -1,7 +1,7 @@
     <?php
     return [
 
-        'paths' => ['api/v1/*', 'broadcasting/auth', 'sanctum/csrf-cookie', 'login', 'logout'],
+        'paths' => ['v1/*', 'broadcasting/auth', 'sanctum/csrf-cookie', 'login', 'logout'],
 
         'allowed_methods' => ['*'],
 
@@ -12,8 +12,8 @@
             'http://localhost:3000',
             'http://127.0.0.1:5500',
             'http://localhost:8000',
-            'https://escameroun.devfack.com',
-            'https://espacecameroun.devfack.com'
+            'https://espacecameroun.com',
+            'https://api.espacecameroun.com'
         ],
 
 

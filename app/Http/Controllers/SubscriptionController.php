@@ -32,7 +32,7 @@ class SubscriptionController extends Controller
         $subscriptionType = $validated['subscription_type'];
         $paymentService = $validated['payment_service'];
         $phoneNumber = $validated['phone_number'];
-        $amount = $subscriptionType === 'monthly' ? 5000 : 50000;
+        $amount = $subscriptionType === 'monthly' ? 1000 : 50000;
         $typeAbonnement = $subscriptionType === 'monthly' ? 'mensuel' : 'annuel';
         //mesomb pour paiement
 
@@ -44,6 +44,13 @@ class SubscriptionController extends Controller
 
         $nonce = RandomGenerator::nonce();
 
+        // return response()->json(
+        //     [
+        //     'amount' => $amount, // Convertir en centimes
+        //     'service' => $paymentService,
+        //     'payer' => $phoneNumber, // Utiliser le numéro fourni
+        //     'nonce' => $nonce,
+        // ], 400);
 
         // Appel à makeCollect avec le numéro dynamique
         $response = $mesomb->makeCollect([

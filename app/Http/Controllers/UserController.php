@@ -82,7 +82,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Connexion réussie',
-            'user' => $user,
+            'user' => $user->load('commercant', 'niveaux_users.parrainageNiveau'),
             'token' => $token,
         ]);     
     }

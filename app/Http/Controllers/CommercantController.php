@@ -7,10 +7,13 @@ use App\Models\Produit;
 use App\Models\Commercant;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+// use Intervention\Image\Image;
+use Intervention\Image\Format;
 use App\Models\ProductFavorite;
 use App\Models\ParrainageNiveau;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 class CommercantController extends Controller
 {
@@ -26,16 +29,22 @@ class CommercantController extends Controller
             ->with('category')
             ->withCount('favorites') // Charger le nombre de favoris
             ->withCount('views')    // Charger le nombre de vues
+            ->orderBy('created_at', 'desc')    // Charger le nombre de vues
             ->get();
         // return response()->json(['produits' => 'produits']);
         return response()->json(['produits' => $produits]);
     }
 
+    // use Intervention\Image\Facades\Image;
+
+    // use Illuminate\Http\Request;
+    // use Intervention\Image\Laravel\Facades\Image;
+
     public function storeProduit(Request $request)
     {
         $user = $request->user();
-        // return response()->json(['message' => $request->all()]);
         if (!$user->commercant) {
+            return response()->json(['message' => 'Utilisateur non autorisé'], 403);
         }
 
         $validated = $request->validate([
@@ -43,7 +52,7 @@ class CommercantController extends Controller
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
             'photos' => 'required|array',
-            'photos.*' => 'image|max:2048', // Limite à 2Mo par image
+            'photos.*' => 'image|max:2048',
             'category_id' => 'required|exists:categories,id',
             'collaboratif' => 'required',
             'marge_min' => 'nullable|numeric|min:0',
@@ -51,20 +60,29 @@ class CommercantController extends Controller
             'ville' => 'nullable|string',
         ]);
 
-        // return response()->json(['produit' => $validated], 201);
-
         $photos = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                // $path = $photo->store('produits', 'public'); // Stocke dans storage/app/public/produits
-                $filename = time() . '_' . $photo->getClientOriginalName();
-                $photo->move(public_path('storage/produits'), $filename);
+                $filename = time() . '_' . pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg';
+                $destinationPath = public_path('storage/produits');
 
-                // $photos[] = asset('storage/' . $path); // Génère l'URL publique
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                // Compression avec redimensionnement, suppression des métadonnées, puis encodage
+                $image = Image::read($photo)
+                    // ->resize(1200, 600, function ($constraint) {
+                    //     $constraint->aspectRatio();
+                    //     $constraint->upsize();
+                    // })
+                    ->encodeByExtension('jpg', quality: 10);
+                $image->save($destinationPath . '/' . $filename);
+
                 $photos[] = asset('storage/produits/' . $filename);
             }
         }
-        // return response()->json(['message' => $photos]);
+
         $produit = Produit::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'commercant_id' => $user->commercant->id,
@@ -72,8 +90,7 @@ class CommercantController extends Controller
             'nom' => $validated['nom'],
             'description' => $validated['description'],
             'prix' => $validated['prix'],
-            'photos' => $photos, // Stocker les URLs en JSON
-            // 'photos' => json_encode($photos), // Stocker les URLs en JSON
+            'photos' => $photos,
             'collaboratif' => $validated['collaboratif'] == '0' ? 0 : 1,
             'marge_min' => $validated['marge_min'] ?? null,
             'quantite' => $validated['stock'],
@@ -82,7 +99,6 @@ class CommercantController extends Controller
 
         return response()->json(['produit' => $produit], 201);
     }
-
   
 
     public function updateProduit(Request $request, $id)
@@ -225,16 +241,11 @@ class CommercantController extends Controller
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'email' => 'nullable|email|max:255', // Ajout du champ email
+            'email' => 'nullable|email|max:255',
             'telephone' => 'required|string|max:20',
             'ville' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation pour le logo (max 2Mo)
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Limite à 2 Mo
         ]);
-
-        // return response()->json([
-        //     'success' => true,
-        //     'commercant' => $validated,
-        // ], 200);
 
         // Préparer les données pour la mise à jour
         $data = [
@@ -248,13 +259,29 @@ class CommercantController extends Controller
         // Gérer le téléchargement du logo si présent
         if ($request->hasFile('logo')) {
             // Supprimer l'ancien logo si existant
-            if ($user->commercant->logo) {
-                Storage::delete('public/commercant/logos/' . basename($user->commercant->logo));
+            if ($user->commercant->logo && file_exists(public_path('storage/' . $user->commercant->logo))) {
+                unlink(public_path('storage/' . $user->commercant->logo));
             }
 
-            // Stocker le nouveau logo
-            $logoPath = $request->file('logo')->store('commercant/logos', 'public');
-            $data['logo'] = $logoPath;
+            // Traiter la nouvelle photo avec Intervention Image
+            $file = $request->file('logo');
+            $filename = time() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg'; // Forcer .jpg
+            $destinationPath = public_path('storage/commercant/logos');
+
+            // Créer le dossier s'il n'existe pas
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            // Compression et redimensionnement
+            $image = Image::read($file)
+             
+                ->encodeByExtension('jpg', quality: 15); // Compression à 75%
+
+            $image->save($destinationPath . '/' . $filename);
+
+            // Enregistrer le chemin relatif en BDD
+            $data['logo'] = 'commercant/logos/' . $filename;
         }
 
         // Mettre à jour le profil du commerçant
@@ -268,7 +295,6 @@ class CommercantController extends Controller
             'commercant' => $updatedCommercant,
         ], 200);
     }
-
 
     public function create(Request $request)
     {

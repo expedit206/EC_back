@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 class ProfileController extends Controller
 {
@@ -121,7 +122,7 @@ class ProfileController extends Controller
 
 
     }
-    
+
     // public function updateProfilePhoto(Request $request)
     // {
     //     $user = $request->user();
@@ -146,6 +147,9 @@ class ProfileController extends Controller
     // }
 
 
+    // use Illuminate\Http\Request;
+    // use Intervention\Image\Laravel\Facades\Image;
+
     public function updateProfilePhoto(Request $request)
     {
         $user = $request->user();
@@ -154,19 +158,33 @@ class ProfileController extends Controller
             'photo' => 'required|image|max:2048', // Limite à 2 Mo
         ]);
 
-      
-        if ($user->photo && file_exists(public_path('storage/'.$user->photo))) {
-        
-            unlink(public_path('storage/'.$user->photo));
+        // Supprimer l'ancienne photo si elle existe
+        if ($user->photo && file_exists(public_path('storage/' . $user->photo))) {
+            unlink(public_path('storage/' . $user->photo));
         }
 
-        // Déplacer la nouvelle photo dans /public/uploads/profile_photos
+        // Traiter la nouvelle photo avec Intervention Image
         $file = $request->file('photo');
-        $filename = time() . '_' . $file->getClientOriginalName();
-        $file->move(public_path('storage/profile_photos'), $filename);
+        $filename = time() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg'; // Forcer .jpg
+        $destinationPath = public_path('storage/profile_photos');
 
-        // Enregistrer le chemin relatif en BDD (ex: "uploads/profile_photos/xxxx.jpg")
-        $photoPath =  'profile_photos/' . $filename;
+        // Créer le dossier s'il n'existe pas
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        // Compression et redimensionnement
+        $image = Image::read($file)
+            // ->resize(300, 300, function ($constraint) {
+            //     $constraint->aspectRatio(); // Préserve le ratio
+            //     $constraint->upsize(); // Évite l’agrandissement
+            // })
+            ->encodeByExtension('jpg', quality: 10); // Compression à 75%
+
+        $image->save($destinationPath . '/' . $filename);
+
+        // Enregistrer le chemin relatif en BDD
+        $photoPath = 'profile_photos/' . $filename;
         $user->update(['photo' => $photoPath]);
 
         return response()->json([

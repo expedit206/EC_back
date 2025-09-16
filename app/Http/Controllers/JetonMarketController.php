@@ -54,7 +54,7 @@ class JetonMarketController extends Controller
 
         // Calcul des montants
         $montantTotal = $offer->total_prix;
-        $commission = $montantTotal * 0.05; // 5% de commission
+        $commission = $montantTotal * 0.10; // 5% de commission
         $montantNet = $montantTotal - $commission; // Montant net pour le vendeur
 
         // Validation des données de paiement (utilisation d'un wallet_id)

@@ -27,7 +27,7 @@ public function index(Request $request)
         $user = \Auth::user(); // Disponible grâce au middleware
         
         $sort = $request->query('sort', 'default');
-        $perPage = $request->query('per_page', 10) === 'all' ? null : (int)$request->query('per_page', 10);
+        $perPage = $request->query('per_page', 5) === 'all' ? null : (int)$request->query('per_page', 10);
         $search = $request->query('search');
         $category = $request->query('category');
         $prixMin = $request->query('prix_min');
@@ -133,7 +133,7 @@ public function index(Request $request)
                 $produit = Produit::with('counts')->find($boost->produit_id);
                 if ($produit && $produit->counts) {
                     $currentViews = $produit->counts->views_count ?? 0;
-                    if ($currentViews >= ($boost->target_views ?? 0) || ($boost->end_date && $boost->end_date < now('Africa/Douala'))) {
+                    if ($currentViews >= ($boost->target_views ?? 0)) {
                         $boost->update(['statut' => 'inactif']);
                     
                     }

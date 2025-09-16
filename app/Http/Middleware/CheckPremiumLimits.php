@@ -19,21 +19,21 @@ class CheckPremiumLimits
         switch ($limitType) {
             case 'product':
                 $productCount = $user->commercant->produits()->count();
-                if (!$user->is_premium && $productCount >= 10) {
-                    return response()->json(['message' => 'Limite de 10 produits atteinte. Passez à Premium pour plus.'], 403);
+                if (!$user->is_premium && $productCount >= 50) {
+                    return response()->json(['message' => 'Limite de 50 produits atteinte. Passez à Premium pour plus.'], 403);
                 }
                 break;
 
             case 'collaboration':
                 $collaborationCount = $user->collaborations()->count(); // À adapter selon votre modèle
-                if (!$user->is_premium && $collaborationCount >= 5) {
-                    return response()->json(['message' => 'Limite de 5 collaborations atteinte. Passez à Premium pour plus.'], 403);
+                if (!$user->is_premium && $collaborationCount >= 50) {
+                    return response()->json(['message' => 'Limite de 50 collaborations atteinte. Passez à Premium pour plus.'], 403);
                 }
                 break;
 
             case 'boost':
                 $usedTokens = $user->usedBoostTokens ?? 0; // À implémenter avec une table ou un champ
-                $maxTokens = $user->is_premium ? 20 : 0;
+                $maxTokens = $user->is_premium ? 30 : 0;
                 if ($usedTokens >= $maxTokens) {
                     return response()->json(['message' => 'Plus de jetons de boost disponibles ce mois-ci.'], 403);
                 }

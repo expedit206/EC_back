@@ -31,7 +31,7 @@ class JetonController extends Controller
         $nombreJetons = $validated['nombre_jetons'];
         $paymentService = $validated['payment_service'];
         $phoneNumber = $validated['phone_number'];
-        $montant = $nombreJetons * 25; // 25 FCFA par jeton
+        $montant = $nombreJetons * 100; // 25 FCFA par jeton
        
 
         // Initialiser MeSomb
