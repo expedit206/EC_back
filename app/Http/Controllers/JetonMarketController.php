@@ -54,7 +54,7 @@ class JetonMarketController extends Controller
 
         // Calcul des montants
         $montantTotal = $offer->total_prix;
-        $commission = $montantTotal * 0.10; // 5% de commission
+        $commission = $montantTotal * 0.10; // 10% de commission
         $montantNet = $montantTotal - $commission; // Montant net pour le vendeur
 
         // Validation des données de paiement (utilisation d'un wallet_id)
@@ -88,34 +88,34 @@ class JetonMarketController extends Controller
         //     'payer' => $phoneNumber,
         //     'nonce' => $nonce,
         // ]], 400);
-        $paymentResponse = $mesomb->makeCollect([
-            'amount' => $montantTotal,
-            'service' => $paymentService,
-            'payer' => $phoneNumber,
-            'nonce' => $nonce,
-        ]);
+        // $paymentResponse = $mesomb->makeCollect([
+        //     'amount' => $montantTotal,
+        //     'service' => $paymentService,
+        //     'payer' => $phoneNumber,
+        //     'nonce' => $nonce,
+        // ]);
 
 
 
-        if (!$paymentResponse->isOperationSuccess()) {
-            // Enregistrer l'échec de la transaction
-            JetonTrade::create([
-                'vendeur_id' => $offer->user_id,
-                'acheteur_id' => $acheteur->id,
-                'offer_id' => $offer->id,
-                'nombre_jetons' => $offer->nombre_jetons,
-                'montant_total' => $montantTotal,
-                'commission_plateforme' => $commission,
-                'montant_net_vendeur' => $montantNet,
-                'methode_paiement' => 'mesomb',
-                'transaction_id_mesomb_vendeur' => null,
-                'transaction_id_mesomb_plateforme' => null,
-                'statut' => 'echec',
-                'date_transaction' => now(),
-            ]);
+        // if (!$paymentResponse->isOperationSuccess()) {
+        //     // Enregistrer l'échec de la transaction
+        //     JetonTrade::create([
+        //         'vendeur_id' => $offer->user_id,
+        //         'acheteur_id' => $acheteur->id,
+        //         'offer_id' => $offer->id,
+        //         'nombre_jetons' => $offer->nombre_jetons,
+        //         'montant_total' => $montantTotal,
+        //         'commission_plateforme' => $commission,
+        //         'montant_net_vendeur' => $montantNet,
+        //         'methode_paiement' => 'mesomb',
+        //         'transaction_id_mesomb_vendeur' => null,
+        //         'transaction_id_mesomb_plateforme' => null,
+        //         'statut' => 'echec',
+        //         'date_transaction' => now(),
+        //     ]);
 
-            return response()->json(['message' => 'Échec du paiement : vérifiez vos informations'], 400);
-        }
+        //     return response()->json(['message' => 'Échec du paiement : vérifiez vos informations'], 400);
+        // }
 
         // Transférer le montant net au vendeur (après déduction de la commission) via son portefeuille
         $depositNonce = RandomGenerator::nonce();
@@ -156,7 +156,7 @@ class JetonMarketController extends Controller
             'commission_plateforme' => $commission,
             'montant_net_vendeur' => $montantNet,
             'methode_paiement' => 'mesomb',
-            'transaction_id_mesomb_vendeur' => $depositResponse->getTransactionId() ?? $depositNonce,
+            'transaction_id_mesomb_vendeur' =>  $depositNonce,
             'transaction_id_mesomb_plateforme' => null, // Pas de transfert séparé pour la commission
             'statut' => 'confirmé',
             'date_transaction' => now(),
