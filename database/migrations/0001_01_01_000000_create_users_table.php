@@ -15,7 +15,7 @@ class CreateUsersTable extends Migration
             $table->string('email')->nullable()->unique();
             $table->string('telephone')->unique();
             $table->string('parrainage_code', 50)->nullable()->unique();
-            $table->string('ville');
+            $table->string('ville')->nullable();
             $table->string('mot_de_passe');
             $table->string('photo')->nullable();
             $table->boolean('premium')->default(false);

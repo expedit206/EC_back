@@ -32,7 +32,7 @@ class SubscriptionController extends Controller
         $subscriptionType = $validated['subscription_type'];
         $paymentService = $validated['payment_service'];
         $phoneNumber = $validated['phone_number'];
-        $amount = $subscriptionType === 'monthly' ? 1000 : 50000;
+        $amount = $subscriptionType === 'monthly' ? 5000 : 50000;
         $typeAbonnement = $subscriptionType === 'monthly' ? 'mensuel' : 'annuel';
         //mesomb pour paiement
 

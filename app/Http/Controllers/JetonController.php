@@ -72,7 +72,8 @@ class JetonController extends Controller
             ]);
 
             // Mettre à jour le solde de jetons de l'utilisateur (à implémenter si nécessaire)
-            // Exemple : $user->update(['jetons' => $user->jetons + $nombreJetons]);
+            // Exemple :
+             $user->update(['jetons' => $user->jetons + $nombreJetons]);
 
             return response()->json([
                 'message' => 'Achat de ' . $nombreJetons . ' jetons réussi',

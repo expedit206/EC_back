@@ -19,11 +19,10 @@ class UserController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'telephone' => 'required|string|max:20|unique:users,telephone',
-            'email' => 'nullable|email|max:255|unique:users,email',
-            'ville' => 'required|string|max:255',
-            'mot_de_passe' => 'required|string|min:8',
-            'parrain_code' => 'nullable|string|max:50|exists:users,parrainage_code', // Nouveau champ
+            'mot_de_passe' => 'required|string|min:8|confirmed', // "confirmed" vérifie mot_de_passe_confirmation
+            'parrain_code' => 'nullable|string|max:50|exists:users,parrainage_code',
         ]);
+
 
         // Récupérer l'ID du parrain à partir du code de parrainage
         $parrainId = null;
@@ -37,8 +36,6 @@ class UserController extends Controller
         $user = User::create([
             'nom' => $request->nom,
             'telephone' => $request->telephone,
-            'email' => $request->email,
-            'ville' => $request->ville,
             'mot_de_passe' => Hash::make($request->mot_de_passe),
             'premium' => false,
             'parrain_id' => $parrainId, // Utilise l'ID du parrain trouvé

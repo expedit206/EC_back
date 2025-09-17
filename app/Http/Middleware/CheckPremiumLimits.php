@@ -31,13 +31,7 @@ class CheckPremiumLimits
                 }
                 break;
 
-            case 'boost':
-                $usedTokens = $user->usedBoostTokens ?? 0; // À implémenter avec une table ou un champ
-                $maxTokens = $user->is_premium ? 30 : 0;
-                if ($usedTokens >= $maxTokens) {
-                    return response()->json(['message' => 'Plus de jetons de boost disponibles ce mois-ci.'], 403);
-                }
-                break;
+        
         }
 
         return $next($request);
