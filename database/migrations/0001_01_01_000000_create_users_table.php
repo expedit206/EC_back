@@ -27,7 +27,6 @@ class CreateUsersTable extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
-            $table->boolean('is_premium')->default(0);
             $table->unsignedInteger('jetons')->default(0);
             $table->decimal('solde', 10, 2)->default(0);
 

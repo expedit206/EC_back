@@ -63,7 +63,7 @@ class SubscriptionController extends Controller
         if ($response->isOperationSuccess()) {
 
 
-            $user->jetons +=20;
+            $user->jetons +=30;
             PremiumTransaction::create([
                 // 'id' => \Str::uuid(),
                 'user_id' => $user->id,
@@ -74,6 +74,8 @@ class SubscriptionController extends Controller
                 'statut' => 'réussi',
                 'date_transaction' => now(),
             ]);
+
+
             // return response()->json(['message' => 'reussi du paiement'], 200);
         } else {
 
@@ -94,7 +96,7 @@ class SubscriptionController extends Controller
 
 
         // Mettre à jour is_premium à 1
-        $user->update(['is_premium' => 1]);
+        $user->update(['premium' => 1]);
 
         // Optionnel : Gérer la durée (mensuel ou annuel)
         $trialOrSubscriptionEndsAt = $subscriptionType === 'monthly' ? now()->addMonth() : now()->addYear();

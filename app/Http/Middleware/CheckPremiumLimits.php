@@ -19,14 +19,14 @@ class CheckPremiumLimits
         switch ($limitType) {
             case 'product':
                 $productCount = $user->commercant->produits()->count();
-                if (!$user->is_premium && $productCount >= 50) {
+                if (!$user->premium && $productCount >= 50) {
                     return response()->json(['message' => 'Limite de 50 produits atteinte. Passez à Premium pour plus.'], 403);
                 }
                 break;
 
             case 'collaboration':
                 $collaborationCount = $user->collaborations()->count(); // À adapter selon votre modèle
-                if (!$user->is_premium && $collaborationCount >= 50) {
+                if (!$user->premium && $collaborationCount >= 50) {
                     return response()->json(['message' => 'Limite de 50 collaborations atteinte. Passez à Premium pour plus.'], 403);
                 }
                 break;
