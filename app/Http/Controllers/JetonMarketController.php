@@ -82,12 +82,12 @@ class JetonMarketController extends Controller
         $nonce = RandomGenerator::nonce();
 
 
-        $paymentResponse = $mesomb->makeCollect([
-            'amount' => $montantTotal,
-            'service' => $paymentService,
-            'payer' => $phoneNumber,
-            'nonce' => $nonce,
-        ]);
+        // $paymentResponse = $mesomb->makeCollect([
+        //     'amount' => $montantTotal,
+        //     'service' => $paymentService,
+        //     'payer' => $phoneNumber,
+        //     'nonce' => $nonce,
+        // ]);
 
 
 
