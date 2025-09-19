@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('chat.{id}', function ($user, $id) {
-    $ids = explode('-', $id);
-    return in_array($user->id, $ids);
+Broadcast::channel('chat.4', function ($user, $id) {
+    // $ids = explode('-', $id);
+    // return in_array($user->id, $ids);
+
+    return true;
 });

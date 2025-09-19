@@ -22,8 +22,8 @@ use App\Models\Message;
 use App\Events\MessageSent;
 
 // Récupérer deux utilisateurs
-$sender = User::find(3); // Remplacez 1 par l'ID d'un utilisateur existant
-$receiver = User::find(4); // Remplacez 2 par un autre ID d'utilisateur
+$sender = User::find(); // Remplacez 1 par l'ID d'un utilisateur existant
+$receiver = User::find(2); // Remplacez 2 par un autre ID d'utilisateur
 
 // Créer un message
 $message = new Message();

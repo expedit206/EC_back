@@ -75,7 +75,7 @@ class ChatController extends Controller
         }
 
         $offset = $request->query('offset', 0); // Par défaut, commence à 0
-        $limit = 30; // Limite de 30 messages par requête
+        $limit = 50; // Limite de 30 messages par requête
 
         $messages = Message::where(function ($query) use ($user, $receiverId) {
             $query->where('sender_id', $user->id)->where('receiver_id', $receiverId);
