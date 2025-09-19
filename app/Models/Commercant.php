@@ -23,8 +23,20 @@ class Commercant extends Model
         });
     }
 
-    protected $fillable = ['id', 'user_id', 'nom', 'description', 'logo', 'ville', 'telephone', 'email'];
-
+  
+    protected $fillable = [
+        'id',
+        'user_id',
+        'nom',
+        'description',
+        'logo',
+        'ville',
+        'telephone',
+        'email',
+        'verification_code',
+        'email_verified_at',
+        'active_products'
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);

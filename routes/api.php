@@ -87,6 +87,9 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
     Route::get('/commercant/{commercant}', [CommercantController::class, 'show'])->name('commercant.show');
     Route::post('/commercant/{commercantId}/rate', [CommercantController::class, 'rate']);
     
+    Route::post('/commercant/verify-email', [CommercantController::class, 'verifyEmail']);
+    Route::post('/commercant/resend-verification', [CommercantController::class, 'resendVerification']);
+
     Route::put('/user/notifications', [UserController::class, 'updateNotifications'])->name('user.notifications.update');   
 
 

@@ -14,3 +14,30 @@ chargement home
 algo affichage produit
 
 la page produit doit recharger
+
+
+
+use App\Models\User;
+use App\Models\Message;
+use App\Events\MessageSent;
+
+// Récupérer deux utilisateurs
+$sender = User::find(3); // Remplacez 1 par l'ID d'un utilisateur existant
+$receiver = User::find(4); // Remplacez 2 par un autre ID d'utilisateur
+
+// Créer un message
+$message = new Message();
+$message->sender_id = $sender->id;
+$message->receiver_id = $receiver->id;
+$message->content = "Test message from Tinker";
+$message->product_id = null; // Ou un ID de produit existant si nécessaire
+$message->save();
+
+// Compter les messages non lus
+$unreadMessages = Message::where('receiver_id', $receiver->id)->where('is_read', false)->count();
+
+// Charger les relations
+$message->load('sender', 'receiver', 'product');
+
+// Déclencher l'événement
+broadcast(new MessageSent($message, $sender, $receiver, $unreadMessages))->toOthers();

@@ -97,46 +97,69 @@ class ChatController extends Controller
      */
     public function store(Request $request, $receiverId)
     {
-        $user= $request->user();
-        
+        $user = $request->user();
+
         if (!$user) {
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
-        
+
+        $receiver = \App\Models\User::find($receiverId);
+        if (!$receiver) {
+            return response()->json(['message' => 'Destinataire non trouvé'], 404);
+        }
+
         $validated = $request->validate([
             'content' => 'required|string|max:1000',
             'product_id' => 'nullable|exists:produits,id',
         ]);
-        
-        
-        $message = new Message();
+
+        $message = new \App\Models\Message();
         $message->sender_id = $user->id;
         $message->receiver_id = $receiverId;
         $message->content = $validated['content'];
-        $message->product_id = $validated['product_id']??null;
+        $message->product_id = $validated['product_id'] ?? null;
         $message->save();
-        
+
+        // Charger les relations pour l'événement
+        $message->load('sender', 'receiver', 'product');
+
+        // Compter les messages non lus
+        $unreadMessages = \App\Models\Message::where('receiver_id', $receiverId)
+            ->where('is_read', false)
+            ->count();
+
         try {
-            // event(new MessageSent($message));
-            // broadcast(new MessageSent($message));
-            Broadcast(new MessageSent($message->load('sender', 'receiver')));
-            \Log::info("Événement MessageSent déclenché", ['message' => $message]);
+            broadcast(new \App\Events\MessageSent($message, $user, $receiver, $unreadMessages))->toOthers();
+            \Log::info('Événement MessageSent déclenché', ['message_id' => $message->id]);
         } catch (\Exception $e) {
-            \Log::warning('Broadcast échoué : ' . $e->getMessage());
+            \Log::error('Échec de la diffusion : ' . $e->getMessage());
         }
 
-        // broadcast(new MessageSent($message));
-        
-        // return response()->json(['message' => 'Message envoyé avec succès', 'message_data' => $message], 201);
-
-        
-        
-//         return response()->json(['message' => 'Message envoyé avec succès',
-//          'message_data' =>  $validated,
-// ], 201);
-        return response()->json(['message' => 'Message envoyé avec succès',
-         'message_data' =>   \Auth::check(),
-], 201);
+        return response()->json([
+            'message' => 'Message envoyé avec succès',
+            'message_data' => [
+                'id' => $message->id,
+                'sender_id' => $message->sender_id,
+                'receiver_id' => $message->receiver_id,
+                'content' => $message->content,
+                'product_id' => $message->product_id,
+                'created_at' => $message->created_at,
+                'updated_at' => $message->updated_at,
+                'is_read' => $message->is_read,
+                'sender' => [
+                    'id' => $message->sender->id,
+                    'nom' => $message->sender->nom,
+                ],
+                'receiver' => [
+                    'id' => $message->receiver->id,
+                    'nom' => $message->receiver->nom,
+                ],
+                'product' => $message->product ? [
+                    'id' => $message->product->id,
+                    'nom' => $message->product->nom,
+                ] : null,
+            ],
+        ], 201);
     }
 
     

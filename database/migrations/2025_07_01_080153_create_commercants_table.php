@@ -19,7 +19,10 @@ return new class extends Migration
             $table->string('logo')->nullable();
             $table->string('ville');
             $table->string('telephone')->nullable(); // Ajout du champ téléphone
-            $table->string('email')->nullable();     // Ajout du champ email
+            $table->string('email');
+
+            $table->string('verification_code')->nullable();
+            $table->timestamp('email_verified_at')->nullable();// Ajout du champ email
             $table->integer('active_products')->default(0); // Champ optionnel pour les produits actifs
             $table->timestamps();
         });

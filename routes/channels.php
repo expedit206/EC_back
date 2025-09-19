@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('chat.{receiver_id}', function ($user, $receiver_id) {
-    return (int) $user->id === (int) $receiver_id; // Autoriser seulement le receiver_id
+Broadcast::channel('chat.{id}', function ($user, $id) {
+    $ids = explode('-', $id);
+    return in_array($user->id, $ids);
 });
-Broadcast::routes();

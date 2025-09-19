@@ -296,6 +296,8 @@ class CommercantController extends Controller
         ], 200);
     }
 
+    // app/Http/Controllers/CommercantController.php
+ 
     public function create(Request $request)
     {
         $user = $request->user();
@@ -304,29 +306,86 @@ class CommercantController extends Controller
             'nom' => 'required|string|max:255',
             'ville' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'logo' => 'nullable|string|max:255', // URL du logo
+            'logo' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'telephone' => 'required|string|max:13|unique:commercants,telephone',
 
+            //telephone pour cameroun
 
         ]);
 
+        // Generate a 6-digit verification code
+        $verificationCode = Str::random(6);
 
-        // Créer le compte commerçant (actif par défaut)
+        // Create the merchant account (not active until verified)
         $commercant = Commercant::create([
             'user_id' => $user->id,
-            'nom' => $validated['nom'] ?? null,
-            'ville' => $validated['ville'] ?? null,
+            'nom' => $validated['nom'],
+            'ville' => $validated['ville'],
+            'telephone' => $validated['telephone'],
             'description' => $validated['description'] ?? null,
             'logo' => $validated['logo'] ?? null,
-
+            'email' => $validated['email'],
+            'verification_code' => $verificationCode,
         ]);
 
-        // Mettre à jour le parrainage si l'utilisateur a un parrain
-        if ($user->parrain_id) {
-            // return response()->json(['m²essage' => $this->updateParrainage($user->parrain_id) ]);
-            $this->updateParrainage($user->parrain_id);
+        // Trigger email sending (we'll use EmailJS from frontend, but prepare data)
+        return response()->json([
+            'message' => 'Compte créé, veuillez vérifier votre email',
+            'commercant' => $commercant,
+            'verification_code' => $verificationCode // Temporarily return for frontend to send email
+        ], 201);
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
+        ]);
+
+        $commercant = Commercant::where('email', $validated['email'])
+            ->where('verification_code', $validated['code'])
+            ->first();
+
+        if (!$commercant) {
+            return response()->json(['message' => 'Code ou email invalide'], 400);
         }
 
-        return response()->json(['message' => 'Compte commerçant créé avec succès', 'commercant' => $commercant], 201);
+        // Mark email as verified
+        $commercant->update([
+            'verification_code' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        // Handle referral if applicable
+        if ($commercant->user->parrain_id) {
+            $this->updateParrainage($commercant->user->parrain_id);
+        }
+
+        return response()->json(['message' => 'Email vérifié avec succès'], 200);
+    }
+
+    // app/Http/Controllers/CommercantController.php
+    public function resendVerification(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $commercant = Commercant::where('email', $validated['email'])->first();
+
+        if (!$commercant || $commercant->email_verified_at) {
+            return response()->json(['message' => 'Email déjà vérifié ou introuvable'], 400);
+        }
+
+        $newCode = Str::random(6);
+        $commercant->update(['verification_code' => $newCode]);
+
+        return response()->json([
+            'message' => 'Nouveau code envoyé',
+            'verification_code' => $newCode,
+        ], 200);
     }
 
     private function updateParrainage($parrain_id)

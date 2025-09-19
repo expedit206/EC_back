@@ -90,7 +90,6 @@ class JetonMarketController extends Controller
         // ]);
 
 
-
         // if (!$paymentResponse->isOperationSuccess()) {
         //     // Enregistrer l'échec de la transaction
         //     JetonTrade::create([
