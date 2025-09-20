@@ -74,22 +74,28 @@ class ChatController extends Controller
             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
         }
 
-        $offset = $request->query('offset', 0); // Par défaut, commence à 0
-        $limit = 50; // Limite de 30 messages par requête
+        $offset = $request->query('offset', 0);
+        $limit = 30; // Limite à 30 messages
 
+        // Récupérer les 30 derniers messages dans l'ordre décroissant, puis les trier en ordre ascendant
         $messages = Message::where(function ($query) use ($user, $receiverId) {
-            $query->where('sender_id', $user->id)->where('receiver_id', $receiverId);
-        })->orWhere(function ($query) use ($user, $receiverId) {
-            $query->where('sender_id', $receiverId)->where('receiver_id', $user->id);
+            $query->where('sender_id', $user->id)->where('receiver_id', $receiverId)
+                ->orWhere('sender_id', $receiverId)->where('receiver_id', $user->id);
         })
-            ->with('sender', 'receiver', 'product')
-            ->orderBy('id', 'desc') // Tri décroissant pour les derniers messages en premier
-            ->offset($offset)
-            ->limit($limit)
+            ->with(['sender', 'receiver', 'product'])
+            ->latest('created_at') // Trier par created_at desc pour obtenir les derniers messages
+            ->skip($offset)
+            ->take($limit + 1) // Prendre un message supplémentaire pour vérifier hasMore
             ->get();
-            // ->reverse(); // Inverse pour avoir les plus anciens en haut
 
-        return response()->json(['messages' => $messages, 'hasMore' => $messages->count() === $limit]);
+        $hasMore = $messages->count() > $limit; // Vérifier s'il y a plus de messages
+        $messages = $messages->take($limit)->sortBy('created_at'); // Limiter à 30 et trier par created_at asc
+
+        return response()->json([
+            'messages' => $messages->values(), // Réindexer la collection
+            'hasMore' => $hasMore,
+            'user' => User::find($receiverId),
+        ]);
     }
 
     /**

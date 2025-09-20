@@ -34,7 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // 'throttle:api', // Limitation des requêtes
         // SubstituteBindings::class, // Liaison des modèles
         // VerifyCsrfToken::class,
-
+        \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         // \Illuminate\Routing\Middleware\SubstituteBindings::class,
         // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
     ]);

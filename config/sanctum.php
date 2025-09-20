@@ -4,6 +4,13 @@ use Laravel\Sanctum\Sanctum;
 
 return [
 
+    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost,127.0.0.1,espacecameroun.com')),
+    'guard' => ['api'], // Utiliser le guard 'api' pour les tokens Bearer
+    'expiration' => null,
+    'middleware' => [
+        'verify_csrf_token' => false, // Désactiver CSRF pour /broadcasting/auth
+        'authenticate' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+    ],
     /*
     |--------------------------------------------------------------------------
     | Stateful Domains
