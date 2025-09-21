@@ -28,7 +28,7 @@ class ParrainageController extends Controller
             return [
                 'filleul_nom' => $filleul->nom,
                 'date_inscription' => $filleul->created_at,
-                'est_commercant' => $filleul->commercant ? true : false,
+                'est_commercant' => $filleul->commercant->email_verified_at ? true : false,
                 'id' => $filleul->commercant ? $filleul->commercant->id : $filleul->id,
             ];
         });
@@ -158,7 +158,12 @@ class ParrainageController extends Controller
     protected function calculateTotalGains($userId)
     {
         // Récupérer le nombre de commerçants parrainés
-        $totalParrainagesCommercants = User::where('parrain_id', $userId)->whereHas('commercant')->count();
+        $totalParrainagesCommercants = User::where('parrain_id', $userId)->
+        // whereHas('commercant')
+        whereHas('commercant', function ($query) {
+            $query->whereNotNull('email_verified_at'); // Commerçants avec email vérifié
+        })
+                ->count();
 
         // Récupérer tous les niveaux ordonnés par filleuls_requis
         $niveaux = ParrainageNiveau::orderBy('filleuls_requis')->get();

@@ -19,7 +19,7 @@ class UserController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'telephone' => 'required|string|max:20|unique:users,telephone',
-            'mot_de_passe' => 'required|string|min:8|confirmed', // "confirmed" vérifie mot_de_passe_confirmation
+            'mot_de_passe' => 'required|string|min:6|confirmed', // "confirmed" vérifie mot_de_passe_confirmation
             'parrain_code' => 'nullable|string|max:50|exists:users,parrainage_code',
         ]);
 
