@@ -3,7 +3,7 @@
 .env
 .envl
 .envp
-# .htaccess
+.htaccess
 .env.backup
 .env.production
 .phpactor.json
