@@ -104,11 +104,11 @@ class UserController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
+        $action = 'login'; // Default
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
             // Extract action and parrain_code from state
-            $action = 'login'; // Default
             $parrainCode = null;
             if ($request->state) {
                 parse_str(urldecode($request->state), $stateParams);
