@@ -1,6 +1,6 @@
 *.log
 .DS_Store
-# .env
+.env
 .envl
 .envp
 .htaccess
